@@ -1,0 +1,34 @@
+{
+  "name": "agile-idm-core",
+  "version": "1.0.0",
+  "repository": "https://github.com/Agile-IoT/agile-idm-core",
+  "description": "Generic Identity Management for the IoT (Core)",
+  "main": "main.js",
+  "directories": {
+    "test": "tests"
+  },
+  "dependencies": {
+    "agile-idm-client": "git+https://github.com/Agile-IoT/agile-idm-client",
+    "clone": "1.0.2",
+    "jsonschema": "^1.1.0",
+    "sqlite3": "3.1.4"
+  },
+  "devDependencies": {
+    "mocha": "2.4.5",
+    "deep-diff": "0.3.3",
+    "assert": "1.4.1"
+  },
+  "scripts": {
+    "test": "mocha tests/*.js"
+  },
+  "keywords": [
+    "Identity",
+    "Management",
+    "Internet",
+    "of",
+    "Things",
+    "Gateway"
+  ],
+  "author": "nopbyte",
+  "license": "Apache-2.0"
+}
