@@ -184,4 +184,48 @@ describe('Sqlite3Storage', function() {
       });
     });
  });
+ describe('#groupQueries()', function () {
+
+ it('should return the  entities by some attribute type and value, if it has been previously stored', function (done) {
+   var storeConf = {"dbName":dbName};
+   var storage = new Sqlite3Storage();
+   var data = {"data":123,"item":123,"owner":"1"};
+   storage.init(storeConf,function(result){
+     if(result.success == true){
+       storage.crudOperation("1", "user", storage.CREATE, data, function (result){
+         if(result.success == true){
+           delete result.data.id;//id is included so remove it to check
+           delete result.data.type;//entity type is included so remove it to check
+           if(deepdif.diff(data,result.data) == undefined){
+             var data2 = {"data":123,"item":123,"owner":"2"};
+             storage.crudOperation("2", "user", storage.CREATE, data, function (result){
+               if(result.success == true){
+                 delete result.data.id;//id is included so remove it to check
+                 delete result.data.type;//entity type is included so remove it to check
+                 if(deepdif.diff(data,result.data) == undefined){
+                            storage.listEntitiesByAttributeTypeAndValue ("owner", "1", function(result){
+                               if(result.success){
+                                  if(result.data.length == 1){
+                                    if(result.data[0].owner == 1)
+                                    return done();
+                                  }
+                               }
+                               throw new Error("cannot find the entity by attribute or it has wrong value");
+                            });
+                 }
+                 else throw "data returned from CREATE doesn't match what I intended to store!";
+               }
+               else throw result;
+              });
+
+           }
+           else throw "data returned from CREATE doesn't match what I intended to store!";
+         }
+         else throw result;
+       });
+     }
+     else throw result.error;
+   });
+ });
+});
 });
