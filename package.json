@@ -17,6 +17,7 @@
   "devDependencies": {
     "mocha": "2.4.5",
     "deep-diff": "0.3.3",
+    "clone": "1.0.2",
     "assert": "1.4.1"
   },
   "scripts": {
