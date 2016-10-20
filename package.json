@@ -10,6 +10,7 @@
   "dependencies": {
     "agile-idm-client": "git+https://github.com/Agile-IoT/agile-idm-client",
     "clone": "1.0.2",
+    "http-errors": "^1.5.0",
     "jsonschema": "^1.1.0",
     "sqlite3": "3.1.4"
   },
