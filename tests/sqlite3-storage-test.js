@@ -7,28 +7,27 @@ const dbName = "database.db";
 
 
 describe('Sqlite3Storage', function() {
-  describe('#crudOperation()', function () {
+  describe('#read and create Entity()', function () {
     //called after each test to delete the database
     afterEach(function() {
+
         if(fs.existsSync(dbName))
           fs.unlinkSync(dbName);
+
     });
 
-    it('should return without data and success == false when entity is not there', function (done) {
+    it('should reject with 404 error when data is not there', function (done) {
       var storeConf = {"dbName":dbName};
       var storage = new Sqlite3Storage();
-        storage.init(storeConf, function(result){
-      	if(result.success == true){
-      		storage.crudOperation("unexistent-stuff", "user", storage.READ, undefined, function (result){
-    	      if(result.success == false){
-    		      done();
-            }
-            else throw result.error;
-          });
-    		}
-    		else{
-    			throw result.error;
-  			}
+        storage.init(storeConf, function(){
+          storage.readEntityPromise("unexistent-stuff", "user")
+            .then(function (result){
+    	               throw Error("should not give results");
+                 },function reject(error){
+                     if(error.statusCode == 404){
+                       done();
+                     }
+           });
       });
     });
 
@@ -36,196 +35,143 @@ describe('Sqlite3Storage', function() {
     it('should return the  data by an id, if it has been previously stored', function (done) {
       var storeConf = {"dbName":dbName};
       var storage = new Sqlite3Storage();
-      var data = {"data":123,"item":123,"owner":"1"};
-      storage.init(storeConf,function(result){
-      	if(result.success == true){
-      		storage.crudOperation("1", "user", storage.CREATE, data, function (result){
-    	      if(result.success == true){
-    		      delete result.data.id;//id is included so remove it to check
-    		      delete result.data.type;//entity type is included so remove it to check
-    		      if(deepdif.diff(data,result.data) == undefined){
-    			      storage.crudOperation("1", "user", storage.READ, "", function onReadFinished( result){
-                  if(result.success == true){
-                    delete result.data.id;//id is included so remove it to check
-                    delete result.data.type;//entity type is included so remove it to check
-          		      if(deepdif.diff(data,result.data) == undefined){
-          			      //after reading the same element as it was created... then we are fine
-          			      done();
-          		      }
-          		      else throw "data returned from READ, after CREATE doesn't match what I intended to store!";
-                  }
-          	      else throw result;
-                });
-    		      }
-    		      else throw "data returned from CREATE doesn't match what I intended to store!";
-            }
-    	      else throw result;
-          });
-    		}
-    		else throw result.error;
+      var owner = "1";
+      var entity_id = "2";
+      var entity_type = "user";
+      var data = {"data":"string","item":123};
+      storage.init(storeConf,function(){
+      		var p = storage.createEntityPromise(entity_id, entity_type, owner, data);
+          p.then(function (d){
+            storage.readEntityPromise(entity_id, entity_type)
+              .then(function (result){
+                if(result.id == entity_id && result.type == entity_type && result.owner == owner){
+                  delete result.id;//id is included so remove it to check
+                  delete result.type;//entity type is included so remove it to check
+                  delete result.owner;//owner is included so remove it to check
+                  if(deepdif.diff(data,result) == undefined)
+                      done();
+                }
+             });
+          }, function rej(r){
+            console.error('a'+r);
+            throw r;
+          })
+      });
+    });
+  });
+
+  describe('#update and read Entity()', function () {
+    //called after each test to delete the database
+    afterEach(function() {
+
+        if(fs.existsSync(dbName))
+          fs.unlinkSync(dbName);
+
+    });
+
+    it('should reject with 404 error when pdating data by and id and entity type that is not there', function (done) {
+      var storeConf = {"dbName":dbName};
+      var storage = new Sqlite3Storage();
+        storage.init(storeConf, function(){
+          storage.updateEntityPromise("unexistent-stuff", "user",{})
+            .then(function (result){
+                    throw Error("should not give results");
+                 },function reject(error){
+                     if(error.statusCode == 404){
+                       done();
+                     }
+           });
       });
     });
 
 
-    it('should update the  data by an id', function (done) {
+    it('should update the  data by an id and entity type', function (done) {
       var storeConf = {"dbName":dbName};
       var storage = new Sqlite3Storage();
-      var data = {"data":123,"item":123,"owner":"1"};
-      storage.init(storeConf, function(result){
-      	if(result.success == true){
-      		storage.crudOperation("1", "user", storage.CREATE, data, function(result){
-            if(result.success == true){
-    	        delete result.data.id;//id is included so remove it to check
-    	        delete result.data.type;//entity type is included so remove it to check
-    	        if(deepdif.diff(data,result.data) == undefined){
-    		        data["new_thing"]="a";
-    		        storage.crudOperation("1", "user", storage.UPDATE, data,function ( result){
-                  if(result.success == true){
-                    delete result.data.id;//id is included so remove it to check
-                    delete result.data.type;//entity type is included so remove it to check
-                    if(deepdif.diff(data,result.data) == undefined){
-          	          storage.crudOperation("1", "user", storage.READ, "",function (result){
-                        delete result.data.id;//id is included so remove it to check
-                        delete result.data.type;//entity type is included so remove it to check
-                        if(deepdif.diff(data,result.data) == undefined){
-                	        done();
+      var owner = "1";
+      var entity_id = "2";
+      var entity_type = "user";
+      var data = {"data":"string","item":123};
+      var data2 = {"data":"string222", "item":8554};
+      storage.init(storeConf,function(){
+          var p = storage.createEntityPromise(entity_id, entity_type, owner, data);
+          p.then(function (data){
+            storage.updateEntityPromise(entity_id, entity_type, data2)
+              .then(function (result){
+                if(result.id == entity_id && result.type == entity_type && result.owner == owner){
+                  delete result.id;//id is included so remove it to check
+                  delete result.type;//entity type is included so remove it to check
+                  delete result.owner;//owner is included so remove it to check
+                  if(deepdif.diff(data2,result) == undefined)
+                  {
+                    storage.readEntityPromise(entity_id, entity_type)
+                    .then(function (result){
+                      if(result.id == entity_id && result.type == entity_type && result.owner == owner){
+                        delete result.id;//id is included so remove it to check
+                        delete result.type;//entity type is included so remove it to check
+                        delete result.owner;//owner is included so remove it to check
+                        if(deepdif.diff(data2,result) == undefined)
+                        {
+                          done();
                         }
-                        else throw "data was not updated succesfully. Data doesn't match what I intended to update";
-                      });
-          		      }
-                    else throw "data returned from READ, after CREATE doesn't match what I intended to store!";
+                      }
+                    });
                   }
-                  else throw result;
-                });
-    	        }
-    	        else throw "data returned from CREATE doesn't match what I intended to store!";
-            }
-            else throw result;
-          });
-    		}
-    		else throw result.error
+                }
+             });
+          }, function rej(r){
+            throw r;
+          })
       });
     });
+});
+describe('#delete and read Entity()', function () {
+    //called after each test to delete the database
+    afterEach(function() {
 
+        if(fs.existsSync(dbName))
+          fs.unlinkSync(dbName);
 
-    it('should delete the  data by an id', function (done) {
+    });
+
+    it('should reject with 404 error when deleting and entity by and id and entity type that is not there', function (done) {
       var storeConf = {"dbName":dbName};
       var storage = new Sqlite3Storage();
-      var data = {"data":123,"item":123,"owner":"1"};
-      storage.init(storeConf, function(result){
-      	if(result.success == true){
-      		storage.crudOperation("1", "user", storage.CREATE, data, function  (result){
-            if(result.success == true){
-    	        delete result.data.id;//id is included so remove it to check
-    	        delete result.data.type;//entity type is included so remove it to check
-    	        if(deepdif.diff(data,result.data) == undefined){
-    		        storage.crudOperation("1", "user", storage.READ, "", function( result){
-                  if(result.success == true){
-                    delete result.data.id;//id is included so remove it to check
-                    delete result.data.type;//entity type is included so remove it to check
-                    if(deepdif.diff(data,result.data) == undefined){
-          	          storage.crudOperation("1", "user", storage.DELETE, "", function (result){
-                        if(result.success == true){
-                          storage.crudOperation("1", "user", storage.READ, "", function (result){
-                            if(result.success == false){
-                    	        done();
-                            }
-                            else throw "data was not removed succesfully. it is still there!";
-                          });
-                        }
-                        else throw result;
-                      });
-                    }
-                    else throw "data returned from READ, after CREATE doesn't match what I intended to store!";
-                  }
-                  else throw result;
-                });
-    	        }
-    	        else throw "data returned from CREATE doesn't match what I intended to store!";
-            }
-            else throw result;
-          });
-    		}
-    		else throw result.error;
+        storage.init(storeConf, function(){
+          storage.deleteEntityPromise("unexistent-stuff", "user")
+            .then(function (result){
+                    throw Error("should not give results");
+                 },function reject(error){
+                      if(error.statusCode == 404){
+                       done();
+                     }
+           });
       });
     });
 
-    it('should return copies, and make copies of data (instead of references)', function (done) {
+
+    it('should delete the  data by an id and entity type', function (done) {
       var storeConf = {"dbName":dbName};
       var storage = new Sqlite3Storage();
-      data = {"data":123,"item":123,"owner":"1"};
-      storage.init(storeConf, function(result){
-      	if(result.success == true){
-      		storage.crudOperation("1", "user", storage.CREATE, data, function (result){
-            if(result.success == true){
-    	        delete result.data.id;//id is included so remove it to check
-    	        delete result.data.type;//entity type is included so remove it to check
-    	        originalData = clone(data);
-    	        if(deepdif.diff(data,result.data) == undefined){
-    		        data["new_thing"]="a";
-    		        result.data["new_thing"]="b";
-    		        storage.crudOperation("1", "user", storage.READ, "", function (originalData,data1,data2,result){
-                  if(result.success == true){
-          	        delete result.data.id;//id is included so remove it to check
-          	        delete result.data.type;//entity type is included so remove it to check
-          	        if(deepdif.diff(originalData,result.data) == undefined){
-          		        done();
-          	        }
-                  }
-                  else throw "data  not present after storing it!";
-                }.bind(this,originalData, data,result.data));
-    	        }
-    	        else throw "data returned from CREATE doesn't match what I intended to store!";
-            }
-            else throw result;
+      var owner = "1";
+      var entity_id = "2";
+      var entity_type = "user";
+      var data = {"data":"string","item":123};
+      var data2 = {"data":"string222", "item":8554};
+      storage.init(storeConf,function(){
+          var p = storage.createEntityPromise(entity_id, entity_type, owner, data);
+          p.then(function (data){
+            storage.deleteEntityPromise(entity_id, entity_type).then(function(){
+              return storage.readEntityPromise(entity_id, entity_type);
+            }).then(function (result){
+            },function rej(r){
+                if(r.statusCode == 404)
+                   done()
+
           });
-    		}
-    		else throw result.error;
+          });
       });
     });
- });
- describe('#groupQueries()', function () {
 
- it('should return the  entities by some attribute type and value, if it has been previously stored', function (done) {
-   var storeConf = {"dbName":dbName};
-   var storage = new Sqlite3Storage();
-   var data = {"data":123,"item":123,"owner":"1"};
-   storage.init(storeConf,function(result){
-     if(result.success == true){
-       storage.crudOperation("1", "user", storage.CREATE, data, function (result){
-         if(result.success == true){
-           delete result.data.id;//id is included so remove it to check
-           delete result.data.type;//entity type is included so remove it to check
-           if(deepdif.diff(data,result.data) == undefined){
-             var data2 = {"data":123,"item":123,"owner":"2"};
-             storage.crudOperation("2", "user", storage.CREATE, data, function (result){
-               if(result.success == true){
-                 delete result.data.id;//id is included so remove it to check
-                 delete result.data.type;//entity type is included so remove it to check
-                 if(deepdif.diff(data,result.data) == undefined){
-                            storage.listEntitiesByAttributeTypeAndValue ("owner", "1", function(result){
-                               if(result.success){
-                                  if(result.data.length == 1){
-                                    if(result.data[0].owner == 1)
-                                    return done();
-                                  }
-                               }
-                               throw new Error("cannot find the entity by attribute or it has wrong value");
-                            });
-                 }
-                 else throw "data returned from CREATE doesn't match what I intended to store!";
-               }
-               else throw result;
-              });
-
-           }
-           else throw "data returned from CREATE doesn't match what I intended to store!";
-         }
-         else throw result;
-       });
-     }
-     else throw result.error;
-   });
- });
 });
 });
