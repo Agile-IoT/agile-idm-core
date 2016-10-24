@@ -41,11 +41,25 @@ var authMockOK = {
   authenticateEntityPromise : function(credentials){
       var that = this;
       return new Promise (function (resolve, reject) {
-              var result = {"user_id":"userid", "auth_type":"auth_type", "scope": ["1"]};
+              var result = {"user_id":credentials, "auth_type":"auth_type", "scope": ["1"]};
               resolve(result);
        });
   }
 }
+
+//NOTE connection is mocked to have a connection that is not shared between different components (required for production
+//Instead, this mocked up version returns a new connection all the time. This would not work in production because only a single object (i.e. the module encapsulating the connection) can read the sqlite db inthe program)
+var EntityStorage = require('../lib/storage/sqlite3-storage');
+var dbconnection =  function (conf) {
+    return new Promise(function (resolve, reject) {
+            var db = new EntityStorage();
+            db.init(conf['storage'], function (result) {
+                    return resolve(db);
+            });
+    });
+
+}
+//TODO improve this mockups to do basic enforcement tests later
 var PdpMockOk = {
    canRead : function (userInfo, entityInfo) {
          return  new Promise(function (resolve, reject){
@@ -62,26 +76,47 @@ var PdpMockOk = {
 //Tests!
 describe('Api', function() {
 
-
   describe('#createEntity and readEntity()', function () {
-
+    
     afterEach(function() {
         if(fs.existsSync(dbName)){
           fs.unlinkSync(dbName);
         }
     });
-    //called after each test to delete the database
+
+    it('should reject with 404 error when data is not there', function (done) {
+      var idmcore = new IdmCore(conf);
+      idmcore.setMocks(authMockOK, null, null,PdpMockOk,dbconnection);
+      idmcore.readEntity(token, entity_id, entity_type)
+        .then(function (read){
+        },function handlereject(error){
+            if(error.statusCode == 404){
+              done();
+            }
+      }).catch(function(err){
+        throw err;
+      });
+    });
+
+
     it('should create an entity by id and return the same afterwards', function (done) {
       var idmcore = new IdmCore(conf);
-      idmcore.setMocks(authMockOK, null, null,PdpMockOk);
+      idmcore.setMocks(authMockOK, null, null,PdpMockOk,dbconnection);
       var entity = clone(entity_1);
-      idmcore.createEntity(token, entity_type, entity_id, entity)
+      idmcore.createEntity(token, entity_id, entity_type, entity)
         .then(function (data){
-            return idmcore.readEntity(token, entity_type, entity_id);
+          if(entity_id == data.id &&  entity_type == data.type && data.owner ==   token + "!@!" + "auth_type"){
+            delete data.id;
+            delete data.type;
+            delete data.owner;
+            if(deepdif.diff(data,entity) == undefined)
+               return idmcore.readEntity(token, entity_id, entity_type);
+          }
         }).then(function (read){
-            if(entity_id == read.id && "/Sensor" == read.type){
+            if(entity_id == read.id && entity_type == read.type && read.owner ==   token + "!@!" + "auth_type"){
               delete read.id;
               delete read.type;
+              delete read.owner;
               if(deepdif.diff(read,entity) == undefined)
                  done()
             }
