@@ -68,6 +68,12 @@ var PdpMockOk = {
          return  new Promise(function (resolve, reject){
               resolve();
          });
+   },
+   canReadArray :function(userInfo, entities){
+     return  new Promise(function (resolve, reject){
+          //console.log('resolving with entities '+JSON.stringify(entities));
+          resolve(entities);
+     });
    }
 };
 
@@ -278,25 +284,40 @@ describe('Api', function() {
      });
 
 
-     /*it('should get an entity based on attribute value and type', function (done) {
+     it('should get an entity based on attribute value and type', function (done) {
        var idmcore = new IdmCore(conf);
        idmcore.setMocks(authMockOK, null, null,PdpMockOk,dbconnection);
        var entity = clone(entity_1);
+       var entity2 = clone(entity_1);
+       var lookedfor = "123123";
+       entity2.token= lookedfor;
        db = new EntityStorage();
        db.init(conf['storage'], function (result) {
-         idmcore.createEntity(token, entity_id, entity_type, entity)
+         idmcore.createEntity(token,  entity_id, entity_type, entity2)
            .then(function (data){
-             if(entity_id == data.id &&  entity_type == data.type && data.owner ==   token + "!@!" + "auth_type"){
+             if( entity_id == data.id  &&  entity_type == data.type && data.owner ==   token + "!@!" + "auth_type"){
+               delete data.id;
+               delete data.type;
+               delete data.owner;
+               if(deepdif.diff(data,entity2) == undefined)
+                  return idmcore.createEntity(token,"someotherid", entity_type, entity)
+             }
+           }).then(function (data){
+             if("someotherid" == data.id &&  entity_type == data.type && data.owner ==   token + "!@!" + "auth_type"){
                delete data.id;
                delete data.type;
                delete data.owner;
                if(deepdif.diff(data,entity) == undefined)
-                  return idmcore.listEntitiesByAttributeValueAndType(token, "token", "DC 20500");
+                  return idmcore.listEntitiesByAttributeValueAndType(token, "token", lookedfor);
              }
            }).then(function(list){
-             console.log('lust'+JSON.stringify(list));
-             done();
-              //return idmcore.readEntity(token, entity_id, entity_type);
+             if(list.length == 1){
+               var data = list[0];
+               if(data.token == lookedfor && entity_id == data.id &&  entity_type == data.type && data.owner ==   token + "!@!" + "auth_type")//more detailed checks in cases when there is only one or more are executed in the sqlite3 tests
+                 done();
+
+             }
+               //return idmcore.readEntity(token, entity_id, entity_type);
            }).then(function (read){
 
            },function handlereject(error){
@@ -306,6 +327,6 @@ describe('Api', function() {
          });
        });
      });
-*/
+
    });
 });

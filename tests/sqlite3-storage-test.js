@@ -198,7 +198,7 @@ describe('#delete and read Entity()', function () {
        });
      });
 
-     it('should return the data by an id and type, if it has been previously stored', function (done) {
+     it('should return one data by an id and type, if it has been previously stored', function (done) {
        var storeConf = {"dbName":dbName};
        var storage = new Sqlite3Storage();
        var owner = "1";
@@ -225,6 +225,45 @@ describe('#delete and read Entity()', function () {
                    }
                  }
 
+              });
+           }, function rej(r){
+             console.error('a'+r);
+             throw r;
+           })
+       });
+     });
+
+
+     it('should return more than one entity by an id and type, if it has been previously stored (case with two elements with the same attribute type and value)', function (done) {
+       var storeConf = {"dbName":dbName};
+       var storage = new Sqlite3Storage();
+       var owner = "1";
+       var entity_id = "2";
+       var entity_type = "user";
+       var data = {"name":"string","token":"123"};
+       var datasecond = {"name":"string","token":"123"};       
+       storage.init(storeConf,function(){
+          var p = storage.createEntityPromise(entity_id, entity_type, owner, data);
+           p.then(function (d){
+             return  storage.createEntityPromise("otherentity", entity_type, owner, datasecond);
+           }).then(function(created){
+             storage.listEntitiesByAttributeValueAndType("name","string")
+               .then(function (array){
+                 if(array.length == 2 && deepdif.diff(array[1], array[2])){
+                   var count =0;
+                   for(var i in array){
+                     result = array[i];
+                     if((result.id == entity_id || result.id == "otherentity") && result.type == entity_type && result.owner == owner){
+                       delete result.id;//id is included so remove it to check
+                       delete result.type;//entity type is included so remove it to check
+                       delete result.owner;//owner is included so remove it to check
+                       if(deepdif.diff(data,result) == undefined || deepdif.diff(datasecond,result) == undefined)
+                           count++;
+                     }
+                   }
+                   if(count == 2)
+                    done();
+                 }
               });
            }, function rej(r){
              console.error('a'+r);
