@@ -162,16 +162,76 @@ describe('#delete and read Entity()', function () {
           var p = storage.createEntityPromise(entity_id, entity_type, owner, data);
           p.then(function (data){
             storage.deleteEntityPromise(entity_id, entity_type).then(function(){
-              return storage.readEntityPromise(entity_id, entity_type);
-            }).then(function (result){
-            },function rej(r){
+                return storage.readEntityPromise(entity_id, entity_type);
+              }).then(function (result){
+              },function rej(r){
                 if(r.statusCode == 404)
                    done()
 
-          });
-          });
+            });
+           });
       });
     });
+ });
 
-});
+ describe('#listEntitiesByAttribute()', function () {
+     //called after each test to delete the database
+     afterEach(function() {
+
+         if(fs.existsSync(dbName))
+           fs.unlinkSync(dbName);
+
+     });
+
+     it('should reject with 404 error when attempting to find entity by type and id that is not there', function (done) {
+       var storeConf = {"dbName":dbName};
+       var storage = new Sqlite3Storage();
+         storage.init(storeConf, function(){
+           storage.listEntitiesByAttributeValueAndType("unexistent-stuff", "user")
+             .then(function (result){
+                     throw Error("should not give results");
+                  },function reject(error){
+                       if(error.statusCode == 404){
+                        done();
+                      }
+            });
+       });
+     });
+
+     it('should return the data by an id and type, if it has been previously stored', function (done) {
+       var storeConf = {"dbName":dbName};
+       var storage = new Sqlite3Storage();
+       var owner = "1";
+       var entity_id = "2";
+       var entity_type = "user";
+       var data = {"name":"string","token":"123"};
+       var datasecond = {"name":"mysecond attribute","token":"123"};
+
+       storage.init(storeConf,function(){
+          var p = storage.createEntityPromise(entity_id, entity_type, owner, data);
+           p.then(function (d){
+             return  storage.createEntityPromise("otherentity", entity_type, owner, datasecond);
+           }).then(function(created){
+             storage.listEntitiesByAttributeValueAndType("name","string")
+               .then(function (result){
+                 if(result.length == 1){
+                   result = result[0];
+                   if(result.id == entity_id && result.type == entity_type && result.owner == owner){
+                     delete result.id;//id is included so remove it to check
+                     delete result.type;//entity type is included so remove it to check
+                     delete result.owner;//owner is included so remove it to check
+                     if(deepdif.diff(data,result) == undefined)
+                         done();
+                   }
+                 }
+
+              });
+           }, function rej(r){
+             console.error('a'+r);
+             throw r;
+           })
+       });
+     });
+
+  });
 });
