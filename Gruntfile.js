@@ -17,21 +17,25 @@ module.exports = function (grunt) {
           config: '.jsbeautifyrc'
         }
       }
+    },
+    jshint: {
+      all: ['Gruntfile.js', 'lib/**/*.js', 'test/**/*.js', 'example/**.js']
     }
   });
 
   grunt.loadNpmTasks("grunt-jsbeautifier");
   grunt.loadNpmTasks('grunt-contrib-jshint');
+
   grunt.registerTask('modify', [
     'jsbeautifier:modify',
-    //    'jshint'
+    'jshint'
   ]);
 
   grunt.registerTask('verify', [
     'jsbeautifier:verify',
-    //    'jshint'
+    'jshint'
   ]);
   // Default task(s).
-  //grunt.registerTask('default', ['verify']);
+  grunt.registerTask('default', ['verify']);
 
 };

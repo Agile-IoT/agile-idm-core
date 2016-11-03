@@ -1,9 +1,9 @@
-const assert = require('assert');
-const deepdif = require('deep-diff');
-const clone = require('clone');
-const Sqlite3Storage = require('../lib/storage/sqlite3-storage.js');
-const fs = require("fs");
-const dbName = "database.db";
+var assert = require('assert');
+var deepdif = require('deep-diff');
+var clone = require('clone');
+var Sqlite3Storage = require('../lib/storage/sqlite3-storage.js');
+var fs = require("fs");
+var dbName = "database.db";
 
 describe('Sqlite3Storage', function () {
   describe('#read and create Entity()', function () {

@@ -1,6 +1,6 @@
 var conf = require('./conf/api-conf');
 var IdmCore = require('../index');
-idmcore = new IdmCore(conf);
+var idmcore = new IdmCore(conf);
 var token = "6328602477442473";
 var action = "create";
 var entity_type = "/Sensor";
@@ -14,4 +14,4 @@ prom.then(function (data) {
   console.log('data from api: ' + JSON.stringify(data));
 }).catch(function (error) {
   console.log('something went wrong in the example: ' + error);
-})
+});

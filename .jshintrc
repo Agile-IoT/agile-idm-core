@@ -5,7 +5,7 @@
     "requirejs": true,
     "require": true
   },
-  "browser": true,
+  "browser": false,
   "bitwise": true,
   "curly": true,
   "eqeqeq": true,
