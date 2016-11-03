@@ -310,4 +310,55 @@ describe('Sqlite3Storage', function () {
     });
 
   });
+  describe('#Create amd Read Group()', function () {
+    //called after each test to delete the database
+    afterEach(function () {
+
+      if (fs.existsSync(dbName))
+        fs.unlinkSync(dbName);
+
+    });
+
+    it('should return a group, if it has been previously stored', function (done) {
+      var storeConf = {
+        "dbName": dbName
+      };
+      var storage = new Sqlite3Storage();
+      var owner = "1";
+      var group_name = "mygroup";
+      var tmp;
+      storage.init(storeConf, function () {
+        var p = storage.createGroupPromise(group_name, owner);
+        p.then(function (d) {
+          tmp = d;
+          return storage.readGroupPromise(group_name, owner);
+        }).then(function (data) {
+          if (data.group_name === group_name && data.owner === owner && deepdif.diff(data, tmp) == undefined) {
+            done();
+          }
+        }, function rej(r) {
+          console.error('a' + r);
+          throw r;
+        })
+      });
+    });
+
+    it('should reject with 404 error when attempting to find entity by type and id that is not there', function (done) {
+      var storeConf = {
+        "dbName": dbName
+      };
+      var storage = new Sqlite3Storage();
+      storage.init(storeConf, function () {
+        storage.readGroupPromise("unexistent-stuff", "user")
+          .then(function (result) {
+            throw Error("should not give results");
+          }, function reject(error) {
+            if (error.statusCode == 404) {
+              done();
+            }
+          });
+      });
+    });
+
+  });
 });
