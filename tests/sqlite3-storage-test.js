@@ -506,6 +506,4 @@ describe('Sqlite3Storage', function () {
     });
   });
 
-  
-
 });
