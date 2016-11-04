@@ -54,7 +54,6 @@ describe('Sqlite3Storage', function () {
                 delete result.type; //entity type is included so remove it to check
                 delete result.owner; //owner is included so remove it to check
                 if (deepdif.diff(data, result) == undefined)
-
                   done();
               }
             });
@@ -319,6 +318,26 @@ describe('Sqlite3Storage', function () {
       if (fs.existsSync(dbName))
         fs.unlinkSync(dbName);
 
+    });
+    it('should reject with 404 if a non existent group is attempt to be read', function (done) {
+      var storeConf = {
+        "dbName": dbName
+      };
+      var storage = new Sqlite3Storage();
+      var tmp;
+      storage.init(storeConf, function () {
+        storage.readGroupPromise("nonexisteng group", "nonexist")
+        .then(function (result) {
+          throw Error("should not give results");
+        }, function reject(error) {
+          if (error.statusCode == 404) {
+            done();
+          }
+        }).catch(function rej(r) {
+          console.error('a' + r);
+          throw r;
+        })
+      });
     });
 
     it('should return a group, if it has been previously stored', function (done) {
