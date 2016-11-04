@@ -54,13 +54,14 @@ describe('Sqlite3Storage', function () {
                 delete result.type; //entity type is included so remove it to check
                 delete result.owner; //owner is included so remove it to check
                 if (deepdif.diff(data, result) == undefined)
+
                   done();
               }
             });
         }, function rej(r) {
           console.error('a' + r);
           throw r;
-        })
+        });
       });
     });
   });
@@ -348,7 +349,6 @@ describe('Sqlite3Storage', function () {
       var storeConf = {
         "dbName": dbName
       };
-
       var storage = new Sqlite3Storage();
       storage.init(storeConf, function () {
         storage.readGroupPromise("unexistent-stuff", "user")
@@ -382,9 +382,9 @@ describe('Sqlite3Storage', function () {
       var storage = new Sqlite3Storage();
       storage.init(storeConf, function () {
         storage.createGroupPromise(group_name, owner)
-        .then(function(group){
-              return storage.AddEntityToGroupByIdsPromise(group.id,"unexistent-stuff", "user")
-        }).then(function (result) {
+          .then(function (group) {
+            return storage.AddEntityToGroupByIdsPromise(group.id, "unexistent-stuff", "user");
+          }).then(function (result) {
             throw Error("should not give results");
           }, function reject(error) {
             if (error.statusCode == 404) {
@@ -408,9 +408,9 @@ describe('Sqlite3Storage', function () {
       };
       storage.init(storeConf, function () {
         storage.createEntityPromise(entity_id, entity_type, owner, data)
-        .then(function(entity){
-              return storage.AddEntityToGroupByIdsPromise("unexistent-group", entity.id, entity.type)
-        }).then(function (result) {
+          .then(function (entity) {
+            return storage.AddEntityToGroupByIdsPromise("unexistent-group", entity.id, entity.type)
+          }).then(function (result) {
             throw Error("should not give results");
           }, function reject(error) {
             if (error.statusCode == 404) {
@@ -419,6 +419,40 @@ describe('Sqlite3Storage', function () {
           });
       });
     });
+
+    it('should return the group as part of the entity when it has been added to a group', function (done) {
+      var storeConf = {
+        "dbName": dbName
+      };
+      var storage = new Sqlite3Storage();
+      var owner = "1";
+      var entity_id = "2";
+      var entity_type = "user";
+      var data = {
+        "name": "string",
+        "token": "123"
+      };
+      var group;
+      var group_name = "mygroup";
+      storage.init(storeConf, function () {
+        storage.createGroupPromise(group_name, owner)
+          .then(function(g){
+            group = g;
+            return storage.createEntityPromise(entity_id, entity_type, owner, data)
+          })
+          .then(function (entity) {
+            return storage.AddEntityToGroupByIdsPromise(group.id,entity_id, entity_type);
+          }).then(function (result) {
+            return storage.readEntityPromise(entity_id, entity_type);
+          }).then(function(entityFinal){
+            if(entityFinal.group_ids.filter(function(v){if(v === group.id) return v}).length == 1)
+              done();
+          }, function reject(error) {
+             throw error;
+          });
+      });
+    });
+
 
   });
 
