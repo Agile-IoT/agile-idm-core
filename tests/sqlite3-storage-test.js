@@ -506,4 +506,74 @@ describe('Sqlite3Storage', function () {
     });
   });
 
+  it('should return only entities that belong to a group after they have been added to it', function (done) {
+    var storeConf = {
+      "dbName": dbName
+    };
+    var storage = new Sqlite3Storage();
+    var owner = "1";
+    var entity_id = "2";
+    var entity_type = "user";
+    var data = {
+      "name": "string",
+      "token": "123"
+    };
+    var group;
+    var group_name = "mygroup";
+    storage.init(storeConf, function () {
+      console.log('init');
+      console.log('init');
+
+      console.log('init');
+
+      console.log('init');
+
+      console.log('init');
+
+      console.log('init');
+
+      console.log('init');
+
+      console.log('init');
+
+      console.log('init');
+
+      console.log('init');
+
+      console.log('init');
+
+      console.log('init');
+
+      console.log('init');
+
+      console.log('init');
+      //storage.createGroupPromise(group_name + "3", owner),
+      /*storage.createEntityPromise(entity_id + "3", entity_type, owner, data)*/
+
+      var ps = [ //storage.createGroupPromise(group_name, owner),
+        storage.createEntityPromise(entity_id, entity_type, owner, data),
+        storage.createEntityPromise(entity_id + "2", entity_type, owner, data)
+      ];
+      Promise.all(ps).then(function () {
+        //storage.createEntityPromise(entity_id + "2", entity_type, owner, data).then(function(){
+        done();
+        //})
+
+        /*console.log('groups and entities there');
+        var memb = [storage.AddEntityToGroupByIdsPromise(owner_id+ "_" + group_name, entity_id, entity_type),
+                    storage.AddEntityToGroupByIdsPromise(owner_id+ "_" + group_name, entity_id+"2", entity_type),
+                    storage.AddEntityToGroupByIdsPromise(owner_id+ "_" + group_name+"3", entity_id+"3", entity_type)
+                    ];
+        Promise.all(memb, function(results){
+              done();
+        });*/
+      }, function (err) {
+        throw err;
+      }).catch(function (err) {
+        throw err;
+      });
+
+    });
+  }).timeout(5000);;
+
 });
