@@ -1,42 +1,60 @@
 var assert = require('assert');
 var deepdif = require('deep-diff');
 var clone = require('clone');
-var Sqlite3Storage = require('../lib/storage/sqlite3-storage.js');
+var LevelStorage = require('../lib/storage/level-storage.js');
 var fs = require("fs");
-var dbName = "database.db";
+var dbName = "database";
+var onlydb;
+
+function createLevelStorage(finished){
+   if(onlydb){
+     return onlydb;
+   }
+   else{
+
+     //we put the cleanDb so it can be used at the end of each test
+     LevelStorage.prototype.cleanDb =  function cleanDb(cb){
+       that = this;
+       that.db.createKeyStream()
+       .on('data', function (data) {
+         console.log('deleting data...');
+         that.db.del(data);
+       })
+       /*.on('close', function () {
+
+       })*/
+       .on('end', function () {
+           console.log("finished cleaning");
+           cb();
+       });
+     };
+     onlydb = new LevelStorage();
+     onlydb.init({
+       "dbName": dbName
+     });
+     return onlydb;
+   }
+}
+
 
 describe('Sqlite3Storage', function () {
   describe('#read and create Entity()', function () {
-    //called after each test to delete the database
-    afterEach(function () {
-
-      if (fs.existsSync(dbName))
-        fs.unlinkSync(dbName);
-
-    });
 
     it('should reject with 404 error when data is not there', function (done) {
-      var storeConf = {
-        "dbName": dbName
-      };
-      var storage = new Sqlite3Storage();
-      storage.init(storeConf, function () {
+
+      var storage = createLevelStorage();
         storage.readEntityPromise("unexistent-stuff", "user")
           .then(function (result) {
             throw Error("should not give results");
           }, function reject(error) {
             if (error.statusCode == 404) {
-              done();
+              storage.cleanDb(done);
             }
-          });
-      });
+        });
     });
 
     it('should return the  data by an id, if it has been previously stored', function (done) {
-      var storeConf = {
-        "dbName": dbName
-      };
-      var storage = new Sqlite3Storage();
+      var storage = createLevelStorage();
       var owner = "1";
       var entity_id = "2";
       var entity_type = "user";
@@ -44,7 +62,6 @@ describe('Sqlite3Storage', function () {
         "data": "string",
         "item": 123
       };
-      storage.init(storeConf, function () {
         var p = storage.createEntityPromise(entity_id, entity_type, owner, data);
         p.then(function (d) {
           storage.readEntityPromise(entity_id, entity_type)
@@ -54,7 +71,7 @@ describe('Sqlite3Storage', function () {
                 delete result.type; //entity type is included so remove it to check
                 delete result.owner; //owner is included so remove it to check
                 if (deepdif.diff(data, result) == undefined)
-                  done();
+                  storage.cleanDb(done);
               }
             });
         }, function rej(r) {
@@ -62,23 +79,48 @@ describe('Sqlite3Storage', function () {
           throw r;
         });
       });
+
+      it('executing promises with Promise.all during creation should work, i.e., data stored in paralell should be present when querying by id', function (done) {
+        var storage = createLevelStorage();
+        var owner = "1";
+        var entity_type = "user";
+        var data = {
+          "data": "string",
+          "item": 123
+        };
+        var ids = ["1","2","3","4","5"];
+        var ps = [];
+        for(i in ids){
+          ps.push(storage.createEntityPromise(ids[i], entity_type, owner, data));
+        }
+        Promise.all(ps).then(function(d){
+          var queries = [];
+          for(i in ids){
+            queries.push(storage.readEntityPromise(ids[i], entity_type));
+          }
+          Promise.all(ps).then(function(results){
+              for(i in results){
+                  var result = results[i];
+                  delete result.id; //id is included so remove it to check
+                  delete result.type; //entity type is included so remove it to check
+                  delete result.owner; //owner is included so remove it to check
+                  if (deepdif.diff(data, result) != undefined)
+                     throw new Error("unexpected piece of data as result "+JSON.stringify(result));
+              }
+              storage.cleanDb(done);
+        });
+      });
     });
   });
 
-  describe('#update and read Entity()', function () {
-    //called after each test to delete the database
-    afterEach(function () {
+/*  describe('#update and read Entity()', function () {
 
-      if (fs.existsSync(dbName))
-        fs.unlinkSync(dbName);
-
-    });
 
     it('should reject with 404 error when pdating data by and id and entity type that is not there', function (done) {
       var storeConf = {
         "dbName": dbName
       };
-      var storage = new Sqlite3Storage();
+      var storage = createLevelStorage();
       storage.init(storeConf, function () {
         storage.updateEntityPromise("unexistent-stuff", "user", {})
           .then(function (result) {
@@ -95,7 +137,7 @@ describe('Sqlite3Storage', function () {
       var storeConf = {
         "dbName": dbName
       };
-      var storage = new Sqlite3Storage();
+      var storage = createLevelStorage();
       var owner = "1";
       var entity_id = "2";
       var entity_type = "user";
@@ -150,7 +192,7 @@ describe('Sqlite3Storage', function () {
       var storeConf = {
         "dbName": dbName
       };
-      var storage = new Sqlite3Storage();
+      var storage = createLevelStorage();
       storage.init(storeConf, function () {
         storage.deleteEntityPromise("unexistent-stuff", "user")
           .then(function (result) {
@@ -167,7 +209,7 @@ describe('Sqlite3Storage', function () {
       var storeConf = {
         "dbName": dbName
       };
-      var storage = new Sqlite3Storage();
+      var storage = createLevelStorage();
       var owner = "1";
       var entity_id = "2";
       var entity_type = "user";
@@ -207,7 +249,7 @@ describe('Sqlite3Storage', function () {
       var storeConf = {
         "dbName": dbName
       };
-      var storage = new Sqlite3Storage();
+      var storage = createLevelStorage();
       storage.init(storeConf, function () {
         storage.listEntitiesByAttributeValueAndType("unexistent-stuff", "user")
           .then(function (result) {
@@ -224,7 +266,7 @@ describe('Sqlite3Storage', function () {
       var storeConf = {
         "dbName": dbName
       };
-      var storage = new Sqlite3Storage();
+      var storage = createLevelStorage();
       var owner = "1";
       var entity_id = "2";
       var entity_type = "user";
@@ -267,7 +309,7 @@ describe('Sqlite3Storage', function () {
       var storeConf = {
         "dbName": dbName
       };
-      var storage = new Sqlite3Storage();
+      var storage = createLevelStorage();
       var owner = "1";
       var entity_id = "2";
       var entity_type = "user";
@@ -324,7 +366,7 @@ describe('Sqlite3Storage', function () {
       var storeConf = {
         "dbName": dbName
       };
-      var storage = new Sqlite3Storage();
+      var storage = createLevelStorage();
       var owner = "1";
       var group_name = "mygroup";
       var tmp;
@@ -348,7 +390,7 @@ describe('Sqlite3Storage', function () {
       var storeConf = {
         "dbName": dbName
       };
-      var storage = new Sqlite3Storage();
+      var storage = createLevelStorage();
       storage.init(storeConf, function () {
         storage.readGroupPromise("unexistent-stuff", "user")
           .then(function (result) {
@@ -378,7 +420,7 @@ describe('Sqlite3Storage', function () {
       };
       var owner = "1";
       var group_name = "mygroup";
-      var storage = new Sqlite3Storage();
+      var storage = createLevelStorage();
       storage.init(storeConf, function () {
         storage.createGroupPromise(group_name, owner)
           .then(function (group) {
@@ -397,7 +439,7 @@ describe('Sqlite3Storage', function () {
       var storeConf = {
         "dbName": dbName
       };
-      var storage = new Sqlite3Storage();
+      var storage = createLevelStorage();
       var owner = "1";
       var entity_id = "2";
       var entity_type = "user";
@@ -423,7 +465,7 @@ describe('Sqlite3Storage', function () {
       var storeConf = {
         "dbName": dbName
       };
-      var storage = new Sqlite3Storage();
+      var storage = createLevelStorage();
       var owner = "1";
       var entity_id = "2";
       var entity_type = "user";
@@ -471,7 +513,7 @@ describe('Sqlite3Storage', function () {
       };
       var owner = "1";
       var group_name = "mygroup";
-      var storage = new Sqlite3Storage();
+      var storage = createLevelStorage();
       storage.init(storeConf, function () {
         storage.listEntitiesByGroupId("nonexistentgroup")
           .then(function (data) {
@@ -490,7 +532,7 @@ describe('Sqlite3Storage', function () {
       };
       var owner = "1";
       var group_name = "mygroup";
-      var storage = new Sqlite3Storage();
+      var storage = createLevelStorage();
       storage.init(storeConf, function () {
         storage.createGroupPromise(group_name, owner)
           .then(function (group) {
@@ -505,5 +547,5 @@ describe('Sqlite3Storage', function () {
       });
     });
   });
-
+*/
 });
