@@ -380,6 +380,41 @@ describe('LevelStorage', function () {
     });
 
   });
+
+  describe('#delete and read group()', function () {
+
+    it('should reject with 404 error when deleting and entity by and id and entity type that is not there', function (done) {
+
+      var storage = createLevelStorage();
+
+      storage.deleteGroupPromise("unexistent-stuff", "user")
+        .then(function (result) {
+          throw Error("should not give results");
+        }, function reject(error) {
+          if (error.statusCode == 404) {
+            storage.cleanDb(done);
+          }
+        });
+
+    });
+
+    it('should delete the  data by an id and entity type', function (done) {
+      var storage = createLevelStorage();
+      var owner = "1";
+      var group_name = "group_name1";
+      var p = storage.createGroupPromise(group_name, owner, owner);
+      p.then(function (data) {
+        storage.deleteGroupPromise(group_name, owner).then(function () {
+          return storage.readGroupPromise(group_name, owner);
+        }).then(function (result) {}, function rej(r) {
+          if (r.statusCode == 404)
+            storage.cleanDb(done);
+
+        });
+      });
+
+    });
+  });
   /*
     describe('#Add  in a Group and readEntity()', function () {
       //called after each test to delete the database
