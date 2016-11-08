@@ -30,20 +30,11 @@ function createLevelStorage(finished) {
         });
       }
       Promise.all([clean(this, 'entities'), clean(this, 'groups')]).then(function (data) {
-          console.log('ready to call done')
-          cb();
-        }, function () {
-          console.log('storage rejection');
-        })
-        /*that.entities.createKeyStream()
-          .on('data', function (data) {
-            console.log('deleting data...');
-            that.entities.del(data);
-          })
-          .on('end', function () {
-            console.log("finished cleaning");
-            cb();
-          });*/
+        console.log('ready to call done')
+        cb();
+      }, function () {
+        console.log('storage rejection');
+      });
     };
     onlydb = new LevelStorage();
     onlydb.init({
