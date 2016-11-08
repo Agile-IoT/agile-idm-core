@@ -3,7 +3,6 @@ var deepdif = require('deep-diff');
 var clone = require('clone');
 var LevelStorage = require('../lib/storage/level-storage.js');
 var fs = require("fs");
-var rmdir = require('rmdir');
 var dbName = "database";
 var onlydb;
 
@@ -179,9 +178,7 @@ describe('LevelStorage', function () {
   describe('#delete and read Entity()', function () {
 
     it('should reject with 404 error when deleting and entity by and id and entity type that is not there', function (done) {
-
       var storage = createLevelStorage();
-
       storage.deleteEntityPromise("unexistent-stuff", "user")
         .then(function (result) {
           throw Error("should not give results");
@@ -221,7 +218,7 @@ describe('LevelStorage', function () {
     });
   });
 
-  /*describe('#listEntitiesByAttribute()', function () {
+  describe('#listEntitiesByAttribute()', function () {
     //called after each test to delete the database
     afterEach(function () {
 
@@ -229,22 +226,20 @@ describe('LevelStorage', function () {
 
     });
 
-    it('should reject with 404 error when attempting to find entity by type and id that is not there', function (done) {
+    it('should resolve with and empty array when attempting to find entity by type and id that is not there', function (done) {
 
       var storage = createLevelStorage();
         storage.listEntitiesByAttributeValueAndType("unexistent-stuff", "user")
           .then(function (result) {
-            throw Error("should not give results");
+              if(result instanceof Array && result.length == 0)
+                storage.cleanDb(done);
           }, function reject(error) {
-            if (error.statusCode == 404) {
-              storage.cleanDb(done);
-            }
+              throw error;
           });
 
     });
 
     it('should return one data by an id and type, if it has been previously stored', function (done) {
-
       var storage = createLevelStorage();
       var owner = "1";
       var entity_id = "2";
@@ -284,7 +279,6 @@ describe('LevelStorage', function () {
     });
 
     it('should return more than one entity by an id and type, if it has been previously stored (case with two elements with the same attribute type and value)', function (done) {
-
       var storage = createLevelStorage();
       var owner = "1";
       var entity_id = "2";
@@ -327,7 +321,7 @@ describe('LevelStorage', function () {
 
   });
 
-  */
+
   describe('#Create amd Read Group()', function () {
     //called after each test to delete the database
     afterEach(function () {
