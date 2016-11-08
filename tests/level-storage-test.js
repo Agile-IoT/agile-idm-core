@@ -15,18 +15,34 @@ function createLevelStorage(finished) {
     //we put the cleanDb so it can be used at the end of each test
     LevelStorage.prototype.cleanDb = function cleanDb(cb) {
       that = this;
-      that.entities.createKeyStream()
+      function clean(that,action_type){
+        return new Promise(function(resolve, reject){
+          that[action_type].createKeyStream()
+          .on('data', function (data) {
+            console.log('deleting data...');
+            that[action_type].del(data);
+          })
+          .on('end', function () {
+            console.log("finished cleaning "+action_type);
+            resolve();
+          });
+        });
+      }
+      Promise.all([clean(this, 'entities'), clean(this, 'groups')]).then(function(data){
+        console.log('ready to call done')
+        cb();
+      },function(){
+        console.log('storage rejection');
+      })
+      /*that.entities.createKeyStream()
         .on('data', function (data) {
           console.log('deleting data...');
           that.entities.del(data);
         })
-        /*.on('close', function () {
-
-        })*/
         .on('end', function () {
           console.log("finished cleaning");
           cb();
-        });
+        });*/
     };
     onlydb = new LevelStorage();
     onlydb.init({
@@ -212,8 +228,8 @@ describe('LevelStorage', function () {
 
     });
   });
-  /*
-    describe('#listEntitiesByAttribute()', function () {
+
+    /*describe('#listEntitiesByAttribute()', function () {
       //called after each test to delete the database
       afterEach(function () {
 
@@ -319,58 +335,54 @@ describe('LevelStorage', function () {
 
     });
 
-    /*describe('#Create amd Read Group()', function () {
+    */
+    describe('#Create amd Read Group()', function () {
       //called after each test to delete the database
       afterEach(function () {
 
-        if (fs.existsSync(dbName))
-          fs.unlinkSync(dbName);
+
+
 
       });
 
       it('should return a group, if it has been previously stored', function (done) {
-        var storeConf = {
-          "dbName": dbName
-        };
         var storage = createLevelStorage();
         var owner = "1";
         var group_name = "mygroup";
         var tmp;
-        storage.init(storeConf, function () {
           var p = storage.createGroupPromise(group_name, owner);
           p.then(function (d) {
             tmp = d;
             return storage.readGroupPromise(group_name, owner);
           }).then(function (data) {
+            console.log('resolved with '+JSON.stringify(data));
+            console.log('expected with '+JSON.stringify(tmp));
+
             if (data.group_name === group_name && data.owner === owner && deepdif.diff(data, tmp) == undefined) {
-              done();
+              storage.cleanDb(done);
             }
           }, function rej(r) {
             console.error('a' + r);
             throw r;
           })
-        });
+
       });
 
       it('should reject with 404 if a non existent group is attempt to be read', function (done) {
-        var storeConf = {
-          "dbName": dbName
-        };
         var storage = createLevelStorage();
-        storage.init(storeConf, function () {
           storage.readGroupPromise("unexistent-stuff", "user")
             .then(function (result) {
               throw Error("should not give results");
             }, function reject(error) {
               if (error.statusCode == 404) {
-                done();
+                storage.cleanDb(done);
               }
             });
-        });
+
       });
 
     });
-
+    /*
     describe('#Add  in a Group and readEntity()', function () {
       //called after each test to delete the database
       afterEach(function () {
