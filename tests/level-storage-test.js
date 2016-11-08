@@ -400,41 +400,31 @@ describe('LevelStorage', function () {
 
     });
   });
-  /*
+
     describe('#Add  in a Group and readEntity()', function () {
       //called after each test to delete the database
       afterEach(function () {
 
-        if (fs.existsSync(dbName))
-          fs.unlinkSync(dbName);
-
       });
 
       it('should reject with 404 error when attempting to place an unexistent entity in a group that exists', function (done) {
-        var storeConf = {
-          "dbName": dbName
-        };
         var owner = "1";
         var group_name = "mygroup";
         var storage = createLevelStorage();
-        storage.init(storeConf, function () {
           storage.createGroupPromise(group_name, owner)
             .then(function (group) {
-              return storage.AddEntityToGroupByIdsPromise(group.id, "unexistent-stuff", "user");
+              return storage.addEntityToGroupPromise (group.group_name, group.owner, "unexistent-stuff", "user");
             }).then(function (result) {
+
               throw Error("should not give results");
-            }, function reject(error) {
+            }, function rejection(error) {
               if (error.statusCode == 404) {
-                done();
+                storage.cleanDb(done);
               }
             });
-        });
       });
 
       it('should reject with 404 error when attempting to place an exitent entity in a group is not there', function (done) {
-        var storeConf = {
-          "dbName": dbName
-        };
         var storage = createLevelStorage();
         var owner = "1";
         var entity_id = "2";
@@ -443,24 +433,19 @@ describe('LevelStorage', function () {
           "name": "string",
           "token": "123"
         };
-        storage.init(storeConf, function () {
           storage.createEntityPromise(entity_id, entity_type, owner, data)
             .then(function (entity) {
-              return storage.AddEntityToGroupByIdsPromise("unexistent-group", entity.id, entity.type);
+              return storage.addEntityToGroupPromise("unexistent-group", owner,  entity.id, entity.type);
             }).then(function (result) {
               throw Error("should not give results");
             }, function reject(error) {
               if (error.statusCode == 404) {
-                done();
+                storage.cleanDb(done);
               }
             });
-        });
       });
 
       it('should return the group as part of the entity when it has been added to a group', function (done) {
-        var storeConf = {
-          "dbName": dbName
-        };
         var storage = createLevelStorage();
         var owner = "1";
         var entity_id = "2";
@@ -471,30 +456,57 @@ describe('LevelStorage', function () {
         };
         var group;
         var group_name = "mygroup";
-        storage.init(storeConf, function () {
           storage.createGroupPromise(group_name, owner)
             .then(function (g) {
               group = g;
               return storage.createEntityPromise(entity_id, entity_type, owner, data)
             })
             .then(function (entity) {
-              return storage.AddEntityToGroupByIdsPromise(group.id, entity_id, entity_type);
+              return storage.addEntityToGroupPromise(group.group_name, group.owner, entity_id, entity_type);
             }).then(function (result) {
               return storage.readEntityPromise(entity_id, entity_type);
             }).then(function (entityFinal) {
-              if (entityFinal.group_ids.filter(function (v) {
-                  if (v === group.id) return v
+              if (entityFinal.groups.filter(function (v) {
+                  if ( group.group_name == v.group_name && v.owner == group.owner) return v
                 }).length == 1)
-                done();
+                storage.cleanDb(done);
             }, function reject(error) {
               throw error;
             });
         });
-      });
+
+        it('should reject with 409 when attempting to add an entity to a group where it has been already  added ', function (done) {
+          var storage = createLevelStorage();
+          var owner = "1";
+          var entity_id = "2";
+          var entity_type = "user";
+          var data = {
+            "name": "string",
+            "token": "123"
+          };
+          var group;
+          var group_name = "mygroup";
+            storage.createGroupPromise(group_name, owner)
+              .then(function (g) {
+                group = g;
+                return storage.createEntityPromise(entity_id, entity_type, owner, data)
+              })
+              .then(function (entity) {
+                return storage.addEntityToGroupPromise(group.group_name, group.owner, entity_id, entity_type);
+              }).then(function (result) {
+                return storage.addEntityToGroupPromise(group.group_name, group.owner, entity_id, entity_type);
+              }).then(function(result){
+                throw Error("should not give results");
+              }, function reject(error) {
+                if (error.statusCode == 409) {
+                  storage.cleanDb(done);
+                }
+              });
+        });
 
     });
 
-    describe('#List entities in  a Group', function () {
+    /*describe('#List entities in  a Group', function () {
       //called after each test to delete the database
       afterEach(function () {
 
@@ -542,6 +554,6 @@ describe('LevelStorage', function () {
             });
         });
       });
-    });
-  */
+    });*/
+
 });
