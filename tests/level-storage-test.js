@@ -15,34 +15,35 @@ function createLevelStorage(finished) {
     //we put the cleanDb so it can be used at the end of each test
     LevelStorage.prototype.cleanDb = function cleanDb(cb) {
       that = this;
-      function clean(that,action_type){
-        return new Promise(function(resolve, reject){
+
+      function clean(that, action_type) {
+        return new Promise(function (resolve, reject) {
           that[action_type].createKeyStream()
-          .on('data', function (data) {
-            console.log('deleting data...');
-            that[action_type].del(data);
-          })
-          .on('end', function () {
-            console.log("finished cleaning "+action_type);
-            resolve();
-          });
+            .on('data', function (data) {
+              console.log('deleting data...');
+              that[action_type].del(data);
+            })
+            .on('end', function () {
+              console.log("finished cleaning " + action_type);
+              resolve();
+            });
         });
       }
-      Promise.all([clean(this, 'entities'), clean(this, 'groups')]).then(function(data){
-        console.log('ready to call done')
-        cb();
-      },function(){
-        console.log('storage rejection');
-      })
-      /*that.entities.createKeyStream()
-        .on('data', function (data) {
-          console.log('deleting data...');
-          that.entities.del(data);
-        })
-        .on('end', function () {
-          console.log("finished cleaning");
+      Promise.all([clean(this, 'entities'), clean(this, 'groups')]).then(function (data) {
+          console.log('ready to call done')
           cb();
-        });*/
+        }, function () {
+          console.log('storage rejection');
+        })
+        /*that.entities.createKeyStream()
+          .on('data', function (data) {
+            console.log('deleting data...');
+            that.entities.del(data);
+          })
+          .on('end', function () {
+            console.log("finished cleaning");
+            cb();
+          });*/
     };
     onlydb = new LevelStorage();
     onlydb.init({
@@ -229,160 +230,157 @@ describe('LevelStorage', function () {
     });
   });
 
-    /*describe('#listEntitiesByAttribute()', function () {
-      //called after each test to delete the database
-      afterEach(function () {
+  /*describe('#listEntitiesByAttribute()', function () {
+    //called after each test to delete the database
+    afterEach(function () {
 
 
 
-      });
+    });
 
-      it('should reject with 404 error when attempting to find entity by type and id that is not there', function (done) {
+    it('should reject with 404 error when attempting to find entity by type and id that is not there', function (done) {
 
-        var storage = createLevelStorage();
-          storage.listEntitiesByAttributeValueAndType("unexistent-stuff", "user")
+      var storage = createLevelStorage();
+        storage.listEntitiesByAttributeValueAndType("unexistent-stuff", "user")
+          .then(function (result) {
+            throw Error("should not give results");
+          }, function reject(error) {
+            if (error.statusCode == 404) {
+              storage.cleanDb(done);
+            }
+          });
+
+    });
+
+    it('should return one data by an id and type, if it has been previously stored', function (done) {
+
+      var storage = createLevelStorage();
+      var owner = "1";
+      var entity_id = "2";
+      var entity_type = "user";
+      var data = {
+        "name": "string",
+        "token": "123"
+      };
+      var datasecond = {
+        "name": "mysecond attribute",
+        "token": "123"
+      };
+
+        var p = storage.createEntityPromise(entity_id, entity_type, owner, data);
+        p.then(function (d) {
+          return storage.createEntityPromise("otherentity", entity_type, owner, datasecond);
+        }).then(function (created) {
+          storage.listEntitiesByAttributeValueAndType("name", "string")
             .then(function (result) {
-              throw Error("should not give results");
-            }, function reject(error) {
-              if (error.statusCode == 404) {
-                storage.cleanDb(done);
+              if (result.length == 1) {
+                result = result[0];
+                if (result.id == entity_id && result.type == entity_type && result.owner == owner) {
+                  delete result.id; //id is included so remove it to check
+                  delete result.type; //entity type is included so remove it to check
+                  delete result.owner; //owner is included so remove it to check
+                  if (deepdif.diff(data, result) == undefined)
+                    storage.cleanDb(done);
+                }
               }
+
             });
+        }, function rej(r) {
+          console.error('a' + r);
+          throw r;
+        })
 
-      });
+    });
 
-      it('should return one data by an id and type, if it has been previously stored', function (done) {
+    it('should return more than one entity by an id and type, if it has been previously stored (case with two elements with the same attribute type and value)', function (done) {
 
-        var storage = createLevelStorage();
-        var owner = "1";
-        var entity_id = "2";
-        var entity_type = "user";
-        var data = {
-          "name": "string",
-          "token": "123"
-        };
-        var datasecond = {
-          "name": "mysecond attribute",
-          "token": "123"
-        };
-
-          var p = storage.createEntityPromise(entity_id, entity_type, owner, data);
-          p.then(function (d) {
-            return storage.createEntityPromise("otherentity", entity_type, owner, datasecond);
-          }).then(function (created) {
-            storage.listEntitiesByAttributeValueAndType("name", "string")
-              .then(function (result) {
-                if (result.length == 1) {
-                  result = result[0];
-                  if (result.id == entity_id && result.type == entity_type && result.owner == owner) {
+      var storage = createLevelStorage();
+      var owner = "1";
+      var entity_id = "2";
+      var entity_type = "user";
+      var data = {
+        "name": "string",
+        "token": "123"
+      };
+      var datasecond = {
+        "name": "string",
+        "token": "123"
+      };
+        var p = storage.createEntityPromise(entity_id, entity_type, owner, data);
+        p.then(function (d) {
+          return storage.createEntityPromise("otherentity", entity_type, owner, datasecond);
+        }).then(function (created) {
+          storage.listEntitiesByAttributeValueAndType("name", "string")
+            .then(function (array) {
+              if (array.length == 2 && deepdif.diff(array[1], array[2])) {
+                var count = 0;
+                for (var i in array) {
+                  result = array[i];
+                  if ((result.id == entity_id || result.id == "otherentity") && result.type == entity_type && result.owner == owner) {
                     delete result.id; //id is included so remove it to check
                     delete result.type; //entity type is included so remove it to check
                     delete result.owner; //owner is included so remove it to check
-                    if (deepdif.diff(data, result) == undefined)
-                      storage.cleanDb(done);
+                    if (deepdif.diff(data, result) == undefined || deepdif.diff(datasecond, result) == undefined)
+                      count++;
                   }
                 }
-
-              });
-          }, function rej(r) {
-            console.error('a' + r);
-            throw r;
-          })
-
+                if (count == 2)
+                  done();
+              }
+            });
+        }, function rej(r) {
+          console.error('a' + r);
+          throw r;
+        })
       });
 
-      it('should return more than one entity by an id and type, if it has been previously stored (case with two elements with the same attribute type and value)', function (done) {
+  });
 
-        var storage = createLevelStorage();
-        var owner = "1";
-        var entity_id = "2";
-        var entity_type = "user";
-        var data = {
-          "name": "string",
-          "token": "123"
-        };
-        var datasecond = {
-          "name": "string",
-          "token": "123"
-        };
-          var p = storage.createEntityPromise(entity_id, entity_type, owner, data);
-          p.then(function (d) {
-            return storage.createEntityPromise("otherentity", entity_type, owner, datasecond);
-          }).then(function (created) {
-            storage.listEntitiesByAttributeValueAndType("name", "string")
-              .then(function (array) {
-                if (array.length == 2 && deepdif.diff(array[1], array[2])) {
-                  var count = 0;
-                  for (var i in array) {
-                    result = array[i];
-                    if ((result.id == entity_id || result.id == "otherentity") && result.type == entity_type && result.owner == owner) {
-                      delete result.id; //id is included so remove it to check
-                      delete result.type; //entity type is included so remove it to check
-                      delete result.owner; //owner is included so remove it to check
-                      if (deepdif.diff(data, result) == undefined || deepdif.diff(datasecond, result) == undefined)
-                        count++;
-                    }
-                  }
-                  if (count == 2)
-                    done();
-                }
-              });
-          }, function rej(r) {
-            console.error('a' + r);
-            throw r;
-          })
+  */
+  describe('#Create amd Read Group()', function () {
+    //called after each test to delete the database
+    afterEach(function () {
+
+    });
+
+    it('should return a group, if it has been previously stored', function (done) {
+      var storage = createLevelStorage();
+      var owner = "1";
+      var group_name = "mygroup";
+      var tmp;
+      var p = storage.createGroupPromise(group_name, owner);
+      p.then(function (d) {
+        tmp = d;
+        return storage.readGroupPromise(group_name, owner);
+      }).then(function (data) {
+        console.log('resolved with ' + JSON.stringify(data));
+        console.log('expected with ' + JSON.stringify(tmp));
+
+        if (data.group_name === group_name && data.owner === owner && deepdif.diff(data, tmp) == undefined) {
+          storage.cleanDb(done);
+        }
+      }, function rej(r) {
+        console.error('a' + r);
+        throw r;
+      })
+
+    });
+
+    it('should reject with 404 if a non existent group is attempt to be read', function (done) {
+      var storage = createLevelStorage();
+      storage.readGroupPromise("unexistent-stuff", "user")
+        .then(function (result) {
+          throw Error("should not give results");
+        }, function reject(error) {
+          if (error.statusCode == 404) {
+            storage.cleanDb(done);
+          }
         });
 
     });
 
-    */
-    describe('#Create amd Read Group()', function () {
-      //called after each test to delete the database
-      afterEach(function () {
-
-
-
-
-      });
-
-      it('should return a group, if it has been previously stored', function (done) {
-        var storage = createLevelStorage();
-        var owner = "1";
-        var group_name = "mygroup";
-        var tmp;
-          var p = storage.createGroupPromise(group_name, owner);
-          p.then(function (d) {
-            tmp = d;
-            return storage.readGroupPromise(group_name, owner);
-          }).then(function (data) {
-            console.log('resolved with '+JSON.stringify(data));
-            console.log('expected with '+JSON.stringify(tmp));
-
-            if (data.group_name === group_name && data.owner === owner && deepdif.diff(data, tmp) == undefined) {
-              storage.cleanDb(done);
-            }
-          }, function rej(r) {
-            console.error('a' + r);
-            throw r;
-          })
-
-      });
-
-      it('should reject with 404 if a non existent group is attempt to be read', function (done) {
-        var storage = createLevelStorage();
-          storage.readGroupPromise("unexistent-stuff", "user")
-            .then(function (result) {
-              throw Error("should not give results");
-            }, function reject(error) {
-              if (error.statusCode == 404) {
-                storage.cleanDb(done);
-              }
-            });
-
-      });
-
-    });
-    /*
+  });
+  /*
     describe('#Add  in a Group and readEntity()', function () {
       //called after each test to delete the database
       afterEach(function () {
