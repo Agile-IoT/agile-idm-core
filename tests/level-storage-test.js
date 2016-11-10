@@ -19,17 +19,15 @@ function createLevelStorage(finished) {
         return new Promise(function (resolve, reject) {
           that[action_type].createKeyStream()
             .on('data', function (data) {
-              console.log('deleting data...');
               that[action_type].del(data);
             })
             .on('end', function () {
-              console.log("finished cleaning " + action_type);
               resolve();
             });
         });
       }
       Promise.all([clean(this, 'entities'), clean(this, 'groups')]).then(function (data) {
-        console.log('ready to call done')
+        console.log('calling done')
         cb();
       }, function () {
         console.log('storage rejection');
@@ -97,20 +95,24 @@ describe('LevelStorage', function () {
       var ids = ["1", "2", "3", "4", "5"];
       var ps = [];
       for (i in ids) {
-        ps.push(storage.createEntityPromise(ids[i], entity_type, owner, data));
+        var c = clone(data);
+        c.item = ids[i];
+        ps.push(storage.createEntityPromise(ids[i], entity_type, owner, c));
       }
       Promise.all(ps).then(function (d) {
         var queries = [];
         for (i in ids) {
           queries.push(storage.readEntityPromise(ids[i], entity_type));
         }
-        Promise.all(ps).then(function (results) {
+        Promise.all(queries).then(function (results) {
           for (i in results) {
             var result = results[i];
             delete result.id; //id is included so remove it to check
             delete result.type; //entity type is included so remove it to check
             delete result.owner; //owner is included so remove it to check
-            if (deepdif.diff(data, result) != undefined)
+            var x =clone(data);
+            x.item = ids[i];
+            if (deepdif.diff(x, result) != undefined)
               throw new Error("unexpected piece of data as result " + JSON.stringify(result));
           }
           storage.cleanDb(done);
@@ -335,9 +337,6 @@ describe('LevelStorage', function () {
         tmp = d;
         return storage.readGroupPromise(group_name, owner);
       }).then(function (data) {
-        console.log('resolved with ' + JSON.stringify(data));
-        console.log('expected with ' + JSON.stringify(tmp));
-
         if (data.group_name === group_name && data.owner === owner && deepdif.diff(data, tmp) == undefined) {
           storage.cleanDb(done);
         }
@@ -489,12 +488,17 @@ describe('LevelStorage', function () {
           return storage.createEntityPromise(entity_id, entity_type, owner, data)
         })
         .then(function (entity) {
+          console.log("_--------------------------=")
           return storage.addEntityToGroupPromise(group.group_name, group.owner, entity_id, entity_type);
         }).then(function (result) {
+          console.log("_--------------------------=")
           return storage.addEntityToGroupPromise(group.group_name, group.owner, entity_id, entity_type);
         }).then(function (result) {
           throw Error("should not give results");
         }, function reject(error) {
+          console.log("_--------------------------=")
+
+          console.log("code" + error.statusCode)
           if (error.statusCode == 409) {
             storage.cleanDb(done);
           }
@@ -503,54 +507,78 @@ describe('LevelStorage', function () {
 
   });
 
-  /*describe('#List entities in  a Group', function () {
+  describe('#List entities  in  a Group', function () {
     //called after each test to delete the database
     afterEach(function () {
-
-      if (fs.existsSync(dbName))
-        fs.unlinkSync(dbName);
 
     });
 
     it('should reject with 404  when attempting to list entities  in an non existent  group', function (done) {
-      var storeConf = {
-        "dbName": dbName
-      };
       var owner = "1";
       var group_name = "mygroup";
       var storage = createLevelStorage();
-      storage.init(storeConf, function () {
-        storage.listEntitiesByGroupId("nonexistentgroup")
+        storage.listEntitiesByGroup("nonexistentgroup","owner")
           .then(function (data) {
             throw new Error("shouldn't return anything here@");
           }, function reject(error) {
             if (error.statusCode == 404) {
-              done();
+              storage.cleanDb(done());
             } else throw error;
           });
-      });
     });
 
     it('should resolve with empty array when attempting to list entities  in an empty  group', function (done) {
-      var storeConf = {
-        "dbName": dbName
-      };
       var owner = "1";
       var group_name = "mygroup";
       var storage = createLevelStorage();
-      storage.init(storeConf, function () {
         storage.createGroupPromise(group_name, owner)
           .then(function (group) {
-            return storage.listEntitiesByGroupId(group.id);
+            return storage.listEntitiesByGroup(group.group_name, group.owner);
           }).then(function (result) {
             if (result instanceof Array && result.length === 0) {
-              done();
+              storage.clean(done());
             } else throw new Error("strange result after querying existing empty group" + JSON.stringify(result));
           }, function reject(error) {
             throw error;
           });
-      });
     });
+  });
+
+/*  it('should resolve with the list continaing only the  array of entities that are in a  group', function (done) {
+    var storage = createLevelStorage();
+    var owner = "1";
+    var entity_type = "user";
+    var data = {
+      "data": "string",
+      "item": 123
+    };
+    var ids = ["1", "2", "3", "4", "5"];
+    var ps = [];
+    for (i in ids)
+      ps.push(storage.createEntityPromise(ids[i], entity_type, owner, data));
+
+    ps.push(storage.createGroupPromise("0", owner));
+    ps.push(storage.createGroupPromise("1", owner));
+
+    Promise.all(ps).then(function (d) {
+      console.log("DONE!")
+      var addingps = [];
+      for (i in ids){
+          console.log('             adding '+(i%2).toString()+' , '+ owner+ ' , ' + ids[i] + ' , ' + entity_type);
+          addingps.push(storage.addEntityToGroupPromise((i%2).toString(), owner, ids[i], entity_type));
+      }
+
+
+      return Promise.all(addingps);
+    }).then(function(results) {
+            console.log("DONE2!")
+      return storage.listEntitiesByGroup("0", owner);
+    }).then(function(entitiesGroup0){
+      console.log("ok"+JSON.stringify(entitiesGroup0))
+      storage.cleanDb(done);
+    });
+  },function f(r){
+    throw r;
   });*/
 
-});
+  });
