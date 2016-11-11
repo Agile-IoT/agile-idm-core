@@ -1,6 +1,6 @@
 module.exports = {
   "storage": {
-    "dbName": "./entities.sqlite3"
+    "dbName": "./database"
   },
   "authentication": {
     "web-server": "http://127.0.0.1:3000/api/",
