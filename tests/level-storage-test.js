@@ -58,7 +58,7 @@ describe('LevelStorage', function () {
         });
     });
 
-    it('should return the  data by an id, if it has been previously stored', function (done) {
+    it('should resolve with the  data by an id, if it has been previously stored', function (done) {
       var storage = createLevelStorage();
       var owner = "1";
       var entity_id = "2";
@@ -241,7 +241,7 @@ describe('LevelStorage', function () {
 
     });
 
-    it('should return one data by an id and type, if it has been previously stored', function (done) {
+    it('should resolve one data by an id and type, if it has been previously stored', function (done) {
       var storage = createLevelStorage();
       var owner = "1";
       var entity_id = "2";
@@ -280,7 +280,7 @@ describe('LevelStorage', function () {
 
     });
 
-    it('should return more than one entity by an id and type, if it has been previously stored (case with two elements with the same attribute type and value)', function (done) {
+    it('should resolve with more than one entity by an id and type, if it has been previously stored (case with two elements with the same attribute type and value)', function (done) {
       var storage = createLevelStorage();
       var owner = "1";
       var entity_id = "2";
@@ -329,7 +329,7 @@ describe('LevelStorage', function () {
 
     });
 
-    it('should return a group, if it has been previously stored', function (done) {
+    it('should resolve with a group, if it has been previously stored', function (done) {
       var storage = createLevelStorage();
       var owner = "1";
       var group_name = "mygroup";
@@ -443,7 +443,7 @@ describe('LevelStorage', function () {
         });
     });
 
-    it('should return the group as part of the entity when it has been added to a group', function (done) {
+    it('should resolve with the group as part of the entity when it has been added to a group', function (done) {
       var storage = createLevelStorage();
       var owner = "1";
       var entity_id = "2";
@@ -473,7 +473,7 @@ describe('LevelStorage', function () {
         });
     });
 
-    it('should resolve an entity containing all its groups after it has been added to several groups with Promises.all', function (done) {
+    it('should resolve with an entity containing all its groups after it has been added to several groups with Promises.all', function (done) {
       var storage = createLevelStorage();
       var owner = "1";
       var entity_type = "user";
@@ -486,15 +486,13 @@ describe('LevelStorage', function () {
       for (i in ids)
         ps.push(storage.createGroupPromise(ids[i], owner));
 
-
       ps.push(storage.createEntityPromise("0", entity_type, owner, data));
       ps.push(storage.createEntityPromise("1", entity_type, owner, data));
-
 
       Promise.all(ps).then(function (d) {
         var addingps = [];
         for (i in ids) {
-          addingps.push(storage.addEntityToGroupPromise(ids[i], owner,(i % 2).toString(), entity_type));
+          addingps.push(storage.addEntityToGroupPromise(ids[i], owner, (i % 2).toString(), entity_type));
         }
         return Promise.all(addingps);
       }).then(function (results) {
@@ -535,7 +533,6 @@ describe('LevelStorage', function () {
           storage.cleanDb(done);
       });
     });
-
 
     it('should reject with 409 when attempting to add an entity to a group where it has been already  added ', function (done) {
       var storage = createLevelStorage();
