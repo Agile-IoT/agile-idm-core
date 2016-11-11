@@ -57,14 +57,14 @@ var authMockOK = {
   }
 }
 
-function cleanDb(done){
-  db.close().then(function(){
+function cleanDb(done) {
+  db.close().then(function () {
     //console.log('db closed');
-    rmdir(dbName+"_entities", function (err, dirs, files) {
+    rmdir(dbName + "_entities", function (err, dirs, files) {
       /*console.log(dirs);
       console.log(files);
       console.log('all files for entities are removed');*/
-      rmdir(dbName+"_groups", function (err, dirs, files) {
+      rmdir(dbName + "_groups", function (err, dirs, files) {
         /*console.log(dirs);
         console.log(files);
         console.log('all files for groups are removed');*/
@@ -72,21 +72,21 @@ function cleanDb(done){
         done();
       });
     });
-  },function(){
+  }, function () {
     throw Error("not able to close database");
   });
-  }
+}
 //NOTE connection is mocked to have a connection that is reset after each test (but only after each test!) A bit different that level-storage test.
 var dbconnection = function (conf) {
     return new Promise(function (resolve, reject) {
-      if(db)
+      if (db)
         resolve(db);
-      else{ //this happens at the beginning (and only at the beginning) of every test
+      else { //this happens at the beginning (and only at the beginning) of every test
         db = new EntityStorage();
         db.init(conf.storage, function (result) {
           return resolve(db);
         });
-    }
+      }
     });
   }
   //TODO improve this mockups to do basic enforcement tests later
@@ -120,15 +120,15 @@ describe('Api', function () {
 
     it('should reject with 404 error when data is not there', function (done) {
       var idmcore = new IdmCore(conf);
-        idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
-        idmcore.readEntity(token, entity_id, entity_type)
-          .then(function (read) {}, function handlereject(error) {
-            if (error.statusCode == 404) {
-              done();
-            }
-          }).catch(function (err) {
-            throw err;
-          });
+      idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
+      idmcore.readEntity(token, entity_id, entity_type)
+        .then(function (read) {}, function handlereject(error) {
+          if (error.statusCode == 404) {
+            done();
+          }
+        }).catch(function (err) {
+          throw err;
+        });
 
     });
 
@@ -136,29 +136,29 @@ describe('Api', function () {
       var idmcore = new IdmCore(conf);
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
       var entity = clone(entity_1);
-        idmcore.createEntity(token, entity_id, entity_type, entity)
-          .then(function (data) {
-            if (entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
-              delete data.id;
-              delete data.type;
-              delete data.owner;
-              if (deepdif.diff(data, entity) == undefined)
-                return idmcore.readEntity(token, entity_id, entity_type);
-            }
-          }).then(function (read) {
-            if (entity_id == read.id && entity_type == read.type && read.owner == token + "!@!" + "auth_type") {
-              delete read.id;
-              delete read.type;
-              delete read.owner;
-              if (deepdif.diff(read, entity) == undefined)
-                done();
-            }
-          }, function handlereject(r) {
-            throw r;
-          }).catch(function (err) {
-            throw err;
-          });
-      });
+      idmcore.createEntity(token, entity_id, entity_type, entity)
+        .then(function (data) {
+          if (entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
+            delete data.id;
+            delete data.type;
+            delete data.owner;
+            if (deepdif.diff(data, entity) == undefined)
+              return idmcore.readEntity(token, entity_id, entity_type);
+          }
+        }).then(function (read) {
+          if (entity_id == read.id && entity_type == read.type && read.owner == token + "!@!" + "auth_type") {
+            delete read.id;
+            delete read.type;
+            delete read.owner;
+            if (deepdif.diff(read, entity) == undefined)
+              done();
+          }
+        }, function handlereject(r) {
+          throw r;
+        }).catch(function (err) {
+          throw err;
+        });
+    });
   });
 
   describe('#update and read Entity()', function () {
@@ -169,53 +169,53 @@ describe('Api', function () {
 
     it('should reject with 404 error when attempting to update data that is not there', function (done) {
       var idmcore = new IdmCore(conf);
-        idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
-        idmcore.updateEntity(token, entity_id, entity_type)
-          .then(function (read) {}, function handlereject(error) {
-            if (error.statusCode == 404) {
-              done();
-            }
-          });
+      idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
+      idmcore.updateEntity(token, entity_id, entity_type)
+        .then(function (read) {}, function handlereject(error) {
+          if (error.statusCode == 404) {
+            done();
+          }
+        });
 
     });
 
     it('should updatea an entity by id and return the proper values afterwards', function (done) {
       var idmcore = new IdmCore(conf);
       var data2;
-        idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
-        var entity = clone(entity_1);
-        idmcore.createEntity(token, entity_id, entity_type, entity)
-          .then(function (data) {
-            if (entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
-              delete data.id;
-              delete data.type;
-              delete data.owner;
-              if (deepdif.diff(data, entity) == undefined) {
-                data2 = clone(data);
-                data2.name = "somenewname";
-                return idmcore.updateEntity(token, entity_id, entity_type, data2);
-              }
+      idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
+      var entity = clone(entity_1);
+      idmcore.createEntity(token, entity_id, entity_type, entity)
+        .then(function (data) {
+          if (entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
+            delete data.id;
+            delete data.type;
+            delete data.owner;
+            if (deepdif.diff(data, entity) == undefined) {
+              data2 = clone(data);
+              data2.name = "somenewname";
+              return idmcore.updateEntity(token, entity_id, entity_type, data2);
             }
-          }).then(function (result) {
-            if (entity_id == result.id && entity_type == result.type && result.owner == token + "!@!" + "auth_type") {
-              delete result.id;
-              delete result.type;
-              delete result.owner;
-              if (deepdif.diff(result, data2) == undefined)
-                return idmcore.readEntity(token, entity_id, entity_type);
-            }
-          })
-          .then(function (read) {
-            if (entity_id == read.id && entity_type == read.type && read.owner == token + "!@!" + "auth_type") {
-              delete read.id;
-              delete read.type;
-              delete read.owner;
-              if (deepdif.diff(read, data2) == undefined)
-                done()
-            }
-          }, function handlereject(r) {
-            throw r;
-          })
+          }
+        }).then(function (result) {
+          if (entity_id == result.id && entity_type == result.type && result.owner == token + "!@!" + "auth_type") {
+            delete result.id;
+            delete result.type;
+            delete result.owner;
+            if (deepdif.diff(result, data2) == undefined)
+              return idmcore.readEntity(token, entity_id, entity_type);
+          }
+        })
+        .then(function (read) {
+          if (entity_id == read.id && entity_type == read.type && read.owner == token + "!@!" + "auth_type") {
+            delete read.id;
+            delete read.type;
+            delete read.owner;
+            if (deepdif.diff(read, data2) == undefined)
+              done()
+          }
+        }, function handlereject(r) {
+          throw r;
+        })
 
     });
   });
@@ -228,41 +228,41 @@ describe('Api', function () {
 
     it('should reject with 404 error when attemtpting to delete data is not there', function (done) {
       var idmcore = new IdmCore(conf);
-        idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
-        idmcore.deleteEntity(token, entity_id, entity_type)
-          .then(function (read) {}, function handlereject(error) {
-            if (error.statusCode == 404) {
-              done();
-            }
-          }).catch(function (err) {
-            throw err;
-          });
+      idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
+      idmcore.deleteEntity(token, entity_id, entity_type)
+        .then(function (read) {}, function handlereject(error) {
+          if (error.statusCode == 404) {
+            done();
+          }
+        }).catch(function (err) {
+          throw err;
+        });
     });
 
     it('should delete an entity by id', function (done) {
       var idmcore = new IdmCore(conf);
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
       var entity = clone(entity_1);
-        idmcore.createEntity(token, entity_id, entity_type, entity)
-          .then(function (data) {
-            if (entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
-              delete data.id;
-              delete data.type;
-              delete data.owner;
-              if (deepdif.diff(data, entity) == undefined)
-                return idmcore.deleteEntity(token, entity_id, entity_type);
-            }
-          }).then(function () {
-            return idmcore.readEntity(token, entity_id, entity_type);
-          }).then(function (read) {
+      idmcore.createEntity(token, entity_id, entity_type, entity)
+        .then(function (data) {
+          if (entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
+            delete data.id;
+            delete data.type;
+            delete data.owner;
+            if (deepdif.diff(data, entity) == undefined)
+              return idmcore.deleteEntity(token, entity_id, entity_type);
+          }
+        }).then(function () {
+          return idmcore.readEntity(token, entity_id, entity_type);
+        }).then(function (read) {
 
-          }, function handlereject(error) {
-            if (error.statusCode == 404) {
-              done();
-            }
-          }).catch(function (err) {
-            throw err;
-          });
+        }, function handlereject(error) {
+          if (error.statusCode == 404) {
+            done();
+          }
+        }).catch(function (err) {
+          throw err;
+        });
     });
   });
 
@@ -274,16 +274,16 @@ describe('Api', function () {
 
     it('should reject with 404 error when there is no entity with attribute value and type', function (done) {
       var idmcore = new IdmCore(conf);
-        idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
-        idmcore.listEntitiesByAttributeValueAndType(token, "ss", "unexistent-stuff")
-          .then(function (read) {
-            if(read instanceof Array && read.length == 0)
-              done();
-          }, function handlereject(error) {
+      idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
+      idmcore.listEntitiesByAttributeValueAndType(token, "ss", "unexistent-stuff")
+        .then(function (read) {
+          if (read instanceof Array && read.length == 0)
+            done();
+        }, function handlereject(error) {
 
-          }).catch(function (err) {
-            throw err;
-          });
+        }).catch(function (err) {
+          throw err;
+        });
 
     });
 
@@ -294,38 +294,38 @@ describe('Api', function () {
       var entity2 = clone(entity_1);
       var lookedfor = "123123";
       entity2.token = lookedfor;
-        idmcore.createEntity(token, entity_id, entity_type, entity2)
-          .then(function (data) {
-            if (entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
-              delete data.id;
-              delete data.type;
-              delete data.owner;
-              if (deepdif.diff(data, entity2) == undefined)
-                return idmcore.createEntity(token, "someotherid", entity_type, entity)
-            }
-          }).then(function (data) {
-            if ("someotherid" == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
-              delete data.id;
-              delete data.type;
-              delete data.owner;
-              if (deepdif.diff(data, entity) == undefined)
-                return idmcore.listEntitiesByAttributeValueAndType(token, "token", lookedfor);
-            }
-          }).then(function (list) {
-            if (list.length == 1) {
-              var data = list[0];
-              if (data.token == lookedfor && entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") //more detailed checks in cases when there is only one or more are executed in the sqlite3 tests
-                done();
+      idmcore.createEntity(token, entity_id, entity_type, entity2)
+        .then(function (data) {
+          if (entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
+            delete data.id;
+            delete data.type;
+            delete data.owner;
+            if (deepdif.diff(data, entity2) == undefined)
+              return idmcore.createEntity(token, "someotherid", entity_type, entity)
+          }
+        }).then(function (data) {
+          if ("someotherid" == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
+            delete data.id;
+            delete data.type;
+            delete data.owner;
+            if (deepdif.diff(data, entity) == undefined)
+              return idmcore.listEntitiesByAttributeValueAndType(token, "token", lookedfor);
+          }
+        }).then(function (list) {
+          if (list.length == 1) {
+            var data = list[0];
+            if (data.token == lookedfor && entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") //more detailed checks in cases when there is only one or more are executed in the sqlite3 tests
+              done();
 
-            }
-            //return idmcore.readEntity(token, entity_id, entity_type);
-          }).then(function (read) {
+          }
+          //return idmcore.readEntity(token, entity_id, entity_type);
+        }).then(function (read) {
 
-          }, function handlereject(error) {
-            throw error;
-          }).catch(function (err) {
-            throw err;
-          });
+        }, function handlereject(error) {
+          throw error;
+        }).catch(function (err) {
+          throw err;
+        });
 
     });
 
