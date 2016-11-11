@@ -1,11 +1,14 @@
 var IdmCore = require('../index');
-const clone = require('clone');
+var clone = require('clone');
 var assert = require('assert');
-const deepdif = require('deep-diff');
-const createError = require('http-errors');
-const fs = require('fs');
+var deepdif = require('deep-diff');
+var createError = require('http-errors');
+var fs = require('fs');
+var EntityStorage = require('../lib/storage/level-storage');
+var db;
 //conf for the API (components such as storage and authentication for the API may be replaced during tests)
-const dbName = "database.db";
+var dbName = "./database";
+var rmdir = require('rmdir');
 var conf = {
   "storage": {
     "dbName": dbName
@@ -54,15 +57,37 @@ var authMockOK = {
   }
 }
 
-//NOTE connection is mocked to have a connection that is not shared between different components (required for production
-//Instead, this mocked up version returns a new connection when necessary the time. This would not work in production because only a single object (i.e. the module encapsulating the connection) can read the sqlite db inthe program)
-var EntityStorage = require('../lib/storage/sqlite3-storage');
-var db;
+function cleanDb(done){
+  db.close().then(function(){
+    //console.log('db closed');
+    rmdir(dbName+"_entities", function (err, dirs, files) {
+      /*console.log(dirs);
+      console.log(files);
+      console.log('all files for entities are removed');*/
+      rmdir(dbName+"_groups", function (err, dirs, files) {
+        /*console.log(dirs);
+        console.log(files);
+        console.log('all files for groups are removed');*/
+        db = null;
+        done();
+      });
+    });
+  },function(){
+    throw Error("not able to close database");
+  });
+  }
+//NOTE connection is mocked to have a connection that is reset after each test (but only after each test!) A bit different that level-storage test.
 var dbconnection = function (conf) {
     return new Promise(function (resolve, reject) {
-      resolve(db);
+      if(db)
+        resolve(db);
+      else{ //this happens at the beginning (and only at the beginning) of every test
+        db = new EntityStorage();
+        db.init(conf.storage, function (result) {
+          return resolve(db);
+        });
+    }
     });
-
   }
   //TODO improve this mockups to do basic enforcement tests later
 var PdpMockOk = {
@@ -88,16 +113,13 @@ var PdpMockOk = {
 describe('Api', function () {
 
   describe('#createEntity and readEntity()', function () {
-    afterEach(function () {
-      if (fs.existsSync(dbName)) {
-        fs.unlinkSync(dbName);
-      }
+
+    afterEach(function (done) {
+      cleanDb(done);
     });
 
     it('should reject with 404 error when data is not there', function (done) {
       var idmcore = new IdmCore(conf);
-      db = new EntityStorage();
-      db.init(conf['storage'], function (result) {
         idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
         idmcore.readEntity(token, entity_id, entity_type)
           .then(function (read) {}, function handlereject(error) {
@@ -107,15 +129,13 @@ describe('Api', function () {
           }).catch(function (err) {
             throw err;
           });
-      });
+
     });
 
     it('should create an entity by id and return the same afterwards', function (done) {
       var idmcore = new IdmCore(conf);
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
       var entity = clone(entity_1);
-      db = new EntityStorage();
-      db.init(conf['storage'], function (result) {
         idmcore.createEntity(token, entity_id, entity_type, entity)
           .then(function (data) {
             if (entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
@@ -131,7 +151,7 @@ describe('Api', function () {
               delete read.type;
               delete read.owner;
               if (deepdif.diff(read, entity) == undefined)
-                done()
+                done();
             }
           }, function handlereject(r) {
             throw r;
@@ -139,20 +159,16 @@ describe('Api', function () {
             throw err;
           });
       });
-    });
   });
 
   describe('#update and read Entity()', function () {
-    afterEach(function () {
-      if (fs.existsSync(dbName)) {
-        fs.unlinkSync(dbName);
-      }
+
+    afterEach(function (done) {
+      cleanDb(done);
     });
 
     it('should reject with 404 error when attempting to update data that is not there', function (done) {
       var idmcore = new IdmCore(conf);
-      db = new EntityStorage();
-      db.init(conf['storage'], function (result) {
         idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
         idmcore.updateEntity(token, entity_id, entity_type)
           .then(function (read) {}, function handlereject(error) {
@@ -160,14 +176,12 @@ describe('Api', function () {
               done();
             }
           });
-      });
+
     });
 
     it('should updatea an entity by id and return the proper values afterwards', function (done) {
       var idmcore = new IdmCore(conf);
       var data2;
-      db = new EntityStorage();
-      db.init(conf['storage'], function (result) {
         idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
         var entity = clone(entity_1);
         idmcore.createEntity(token, entity_id, entity_type, entity)
@@ -202,21 +216,18 @@ describe('Api', function () {
           }, function handlereject(r) {
             throw r;
           })
-      });
+
     });
   });
 
   describe('#delete and readEntity()', function () {
-    afterEach(function () {
-      if (fs.existsSync(dbName)) {
-        fs.unlinkSync(dbName);
-      }
+
+    afterEach(function (done) {
+      cleanDb(done);
     });
 
     it('should reject with 404 error when attemtpting to delete data is not there', function (done) {
       var idmcore = new IdmCore(conf);
-      db = new EntityStorage();
-      db.init(conf['storage'], function (result) {
         idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
         idmcore.deleteEntity(token, entity_id, entity_type)
           .then(function (read) {}, function handlereject(error) {
@@ -226,15 +237,12 @@ describe('Api', function () {
           }).catch(function (err) {
             throw err;
           });
-      });
     });
 
     it('should delete an entity by id', function (done) {
       var idmcore = new IdmCore(conf);
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
       var entity = clone(entity_1);
-      db = new EntityStorage();
-      db.init(conf['storage'], function (result) {
         idmcore.createEntity(token, entity_id, entity_type, entity)
           .then(function (data) {
             if (entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
@@ -255,31 +263,28 @@ describe('Api', function () {
           }).catch(function (err) {
             throw err;
           });
-      });
     });
   });
 
   describe('#search entity by attribute value', function () {
-    afterEach(function () {
-      if (fs.existsSync(dbName)) {
-        fs.unlinkSync(dbName);
-      }
+
+    afterEach(function (done) {
+      cleanDb(done);
     });
 
     it('should reject with 404 error when there is no entity with attribute value and type', function (done) {
       var idmcore = new IdmCore(conf);
-      db = new EntityStorage();
-      db.init(conf['storage'], function (result) {
         idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
         idmcore.listEntitiesByAttributeValueAndType(token, "ss", "unexistent-stuff")
-          .then(function (read) {}, function handlereject(error) {
-            if (error.statusCode == 404) {
+          .then(function (read) {
+            if(read instanceof Array && read.length == 0)
               done();
-            }
+          }, function handlereject(error) {
+
           }).catch(function (err) {
             throw err;
           });
-      });
+
     });
 
     it('should get an entity based on attribute value and type', function (done) {
@@ -289,8 +294,6 @@ describe('Api', function () {
       var entity2 = clone(entity_1);
       var lookedfor = "123123";
       entity2.token = lookedfor;
-      db = new EntityStorage();
-      db.init(conf['storage'], function (result) {
         idmcore.createEntity(token, entity_id, entity_type, entity2)
           .then(function (data) {
             if (entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
@@ -323,7 +326,7 @@ describe('Api', function () {
           }).catch(function (err) {
             throw err;
           });
-      });
+
     });
 
   });
