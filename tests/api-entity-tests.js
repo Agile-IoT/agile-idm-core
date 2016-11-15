@@ -94,12 +94,12 @@ var dbconnection = function (conf) {
 var PdpMockOk = {
   canRead: function (userInfo, entityInfo) {
     return new Promise(function (resolve, reject) {
-      resolve();
+      resolve(entityInfo);
     });
   },
   canDelete: function (userInfo, entityInfo) {
     return new Promise(function (resolve, reject) {
-      resolve();
+      resolve(entityInfo);
     });
   },
   canReadArray: function (userInfo, entities) {
@@ -109,6 +109,12 @@ var PdpMockOk = {
     });
   },
   canWriteToAttribute: function (userInfo, entities, attributeName, attributeValue) {
+    return new Promise(function (resolve, reject) {
+      //console.log('resolving with entities '+JSON.stringify(entities));
+      resolve();
+    });
+  },
+  canUpdate: function (userInfo, entities, attributeName, attributeValue) {
     return new Promise(function (resolve, reject) {
       //console.log('resolving with entities '+JSON.stringify(entities));
       resolve();
@@ -178,7 +184,7 @@ describe('Api', function () {
     it('should reject with 404 error when attempting to update data that is not there', function (done) {
       var idmcore = new IdmCore(conf);
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
-      idmcore.setAttribute(token, entity_id, entity_type, "attributename", "value")
+      idmcore.setEntityAttribute(token, entity_id, entity_type, "attributename", "value")
         .then(function (read) {}, function handlereject(error) {
           if (error.statusCode == 404) {
             done();
@@ -201,7 +207,7 @@ describe('Api', function () {
             if (deepdif.diff(data, entity) == undefined) {
               data2 = clone(data);
               data2.name = "somenewname";
-              return idmcore.setAttribute(token, entity_id, entity_type, "name", "somenewname");
+              return idmcore.setEntityAttribute(token, entity_id, entity_type, "name", "somenewname");
             }
           }
         }).then(function (result) {
