@@ -19,8 +19,8 @@ var data = {
 var prom = idmcore.createEntity(token, entity_id, entity_type, data);
 prom.then(function (data) {
   console.log('data from api after creation: ' + JSON.stringify(data));
-  return idmcore.readEntity(token,entity_id, entity_type);
-}).then(function(read){
+  return idmcore.readEntity(token, entity_id, entity_type);
+}).then(function (read) {
   console.log('now reading data again gave back : ' + JSON.stringify(read));
 }).catch(function (error) {
   console.log('something went wrong in the example: ' + error);
