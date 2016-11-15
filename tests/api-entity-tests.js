@@ -76,27 +76,28 @@ function cleanDb(done) {
     throw Error("not able to close database");
   });
 }
+
 //NOTE connection is mocked to have a connection that is reset after each test (but only after each test!) A bit different that level-storage test.
 var dbconnection = function (conf) {
-    return new Promise(function (resolve, reject) {
-      if (db)
-        resolve(db);
-      else { //this happens at the beginning (and only at the beginning) of every test
-        db = new EntityStorage();
-        db.init(conf.storage, function (result) {
-          return resolve(db);
-        });
-      }
-    });
-  }
-  //TODO improve this mockups to do basic enforcement tests later
+  return new Promise(function (resolve, reject) {
+    if (db)
+      resolve(db);
+    else { //this happens at the beginning (and only at the beginning) of every test
+      db = new EntityStorage();
+      db.init(conf.storage, function (result) {
+        return resolve(db);
+      });
+    }
+  });
+}
+
 var PdpMockOk = {
   canRead: function (userInfo, entityInfo) {
     return new Promise(function (resolve, reject) {
       resolve();
     });
   },
-  canWrite: function (userInfo, entityInfo) {
+  canDelete: function (userInfo, entityInfo) {
     return new Promise(function (resolve, reject) {
       resolve();
     });
@@ -106,7 +107,14 @@ var PdpMockOk = {
       //console.log('resolving with entities '+JSON.stringify(entities));
       resolve(entities);
     });
+  },
+  canWriteToAttribute: function (userInfo, entities, attributeName, attributeValue) {
+    return new Promise(function (resolve, reject) {
+      //console.log('resolving with entities '+JSON.stringify(entities));
+      resolve();
+    });
   }
+
 };
 
 //Tests!
@@ -161,7 +169,7 @@ describe('Api', function () {
     });
   });
 
-  describe('#update and read Entity()', function () {
+  describe('#set attribute and read Entity()', function () {
 
     afterEach(function (done) {
       cleanDb(done);
@@ -170,7 +178,7 @@ describe('Api', function () {
     it('should reject with 404 error when attempting to update data that is not there', function (done) {
       var idmcore = new IdmCore(conf);
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
-      idmcore.updateEntity(token, entity_id, entity_type)
+      idmcore.setAttribute(token, entity_id, entity_type, "attributename", "value")
         .then(function (read) {}, function handlereject(error) {
           if (error.statusCode == 404) {
             done();
@@ -179,7 +187,7 @@ describe('Api', function () {
 
     });
 
-    it('should updatea an entity by id and return the proper values afterwards', function (done) {
+    it('should update an entity by id and return the proper values afterwards', function (done) {
       var idmcore = new IdmCore(conf);
       var data2;
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
@@ -193,7 +201,7 @@ describe('Api', function () {
             if (deepdif.diff(data, entity) == undefined) {
               data2 = clone(data);
               data2.name = "somenewname";
-              return idmcore.updateEntity(token, entity_id, entity_type, data2);
+              return idmcore.setAttribute(token, entity_id, entity_type, "name", "somenewname");
             }
           }
         }).then(function (result) {
