@@ -260,4 +260,73 @@ describe('Groups Api', function () {
     });
 
   });
+
+  describe('#remove entity from a  group', function () {
+
+    afterEach(function (done) {
+      cleanDb(done);
+    });
+
+    it('should reject with 409 error when attempting to remove a non existing entity from a group', function (done) {
+      var idmcore = new IdmCore(conf);
+      idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
+      var owner = token + "!@!" + "auth_type";
+      idmcore.createGroup(token, group_name)
+        .then(function (read) {
+          return idmcore.removeEntityFromGroup(token, group_name, owner, entity_id, entity_type);
+        }).then(function (res) {
+
+        }, function handlereject(error) {
+          if (error.statusCode == 409) {
+            done();
+          }
+        });
+    });
+
+    it('should reject with 404 error when attempting to remove an exiting entity from a non existing group', function (done) {
+      var idmcore = new IdmCore(conf);
+      idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
+      var owner = token + "!@!" + "auth_type";
+      idmcore.createEntity(token, entity_id, entity_type, entity_1)
+        .then(function (read) {
+          return idmcore.removeEntityFromGroup(token, group_name, owner, entity_id, entity_type);
+        }).then(function (res) {
+
+        }, function handlereject(error) {
+
+          if (error.statusCode == 404) {
+            done();
+          } else {
+            throw new Error('found unexpected error' + error);
+          }
+
+        });
+    });
+
+    it('should resolve with a modified entity without the group  after removing the entity from a gorup where it was', function (done) {
+      var idmcore = new IdmCore(conf);
+      idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
+      var owner = token + "!@!" + "auth_type";
+      var ps = [idmcore.createEntity(token, entity_id, entity_type, entity_1), idmcore.createGroup(token, group_name)];
+      Promise.all(ps)
+        .then(function (read) {
+          return idmcore.addEntityToGroup(token, group_name, owner, entity_id, entity_type);
+        }).then(function (res) {
+          return idmcore.readEntity(token, entity_id, entity_type);
+        }).then(function (entityFinal) {
+          if (entityFinal.groups.filter(function (v) {
+              return (group_name == v.group_name && v.owner == owner);
+            }).length == 1)
+            return idmcore.removeEntityFromGroup(token, group_name, owner, entity_id, entity_type);
+        }).then(function () {
+          return idmcore.readEntity(token, entity_id, entity_type);
+        }).then(function (entityFinal) {
+          if (entityFinal.groups.filter(function (v) {
+              return (group_name == v.group_name && v.owner == owner);
+            }).length == 0)
+            done();
+        }, function handlereject(error) {});
+    });
+
+  });
 });
