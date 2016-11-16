@@ -245,19 +245,18 @@ describe('Groups Api', function () {
       var idmcore = new IdmCore(conf);
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
       var owner = token + "!@!" + "auth_type";
-      var ps = [idmcore.createEntity(token, entity_id, entity_type, entity_1),idmcore.createGroup(token, group_name)];
+      var ps = [idmcore.createEntity(token, entity_id, entity_type, entity_1), idmcore.createGroup(token, group_name)];
       Promise.all(ps)
         .then(function (read) {
           return idmcore.addEntityToGroup(token, group_name, owner, entity_id, entity_type);
         }).then(function (res) {
-          return idmcore.readEntity(token,entity_id, entity_type);
-        }).then(function(entityFinal){
+          return idmcore.readEntity(token, entity_id, entity_type);
+        }).then(function (entityFinal) {
           if (entityFinal.groups.filter(function (v) {
               return (group_name == v.group_name && v.owner == owner);
             }).length == 1)
             done();
-        }, function handlereject(error) {
-        });
+        }, function handlereject(error) {});
     });
 
   });
