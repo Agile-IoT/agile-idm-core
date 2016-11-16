@@ -137,7 +137,7 @@ describe('Entities Api', function () {
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
       idmcore.readEntity(token, entity_id, entity_type)
         .then(function (read) {
-           throw new Error('unexpec')
+          throw new Error('unexpec')
         }, function handlereject(error) {
           if (error.statusCode == 404) {
             done();
