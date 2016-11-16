@@ -114,17 +114,17 @@ var PdpMockOk = {
       resolve();
     });
   },
-  canUpdate: function (userInfo, entities, attributeName, attributeValue) {
+  canUpdate: function (userInfo, entityInfo) {
     return new Promise(function (resolve, reject) {
       //console.log('resolving with entities '+JSON.stringify(entities));
-      resolve();
+      resolve(entityInfo);
     });
   }
 
 };
 
 //Tests!
-describe('Api', function () {
+describe('Entities Api', function () {
 
   describe('#createEntity and readEntity()', function () {
 

@@ -107,17 +107,17 @@ var PdpMockOk = {
       resolve();
     });
   },
-  canUpdate: function (userInfo, entities, attributeName, attributeValue) {
+  canUpdate: function (userInfo, entityInfo) {
     return new Promise(function (resolve, reject) {
       //console.log('resolving with entities '+JSON.stringify(entities));
-      resolve();
+      resolve(entityInfo);
     });
   }
 
 };
 
 //Tests!
-describe('Api', function () {
+describe('Groups Api', function () {
 
   describe('#createGroup  and readGroup()', function () {
 
@@ -185,7 +185,6 @@ describe('Api', function () {
 
       var idmcore = new IdmCore(conf);
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
-      var entity = clone(entity_1);
       var owner = token + "!@!" + "auth_type";
       idmcore.createGroup(token, group_name)
         .then(function (data) {
@@ -203,69 +202,63 @@ describe('Api', function () {
 
     });
   });
-  /*
-   describe('#search entity by attribute value', function () {
 
-     afterEach(function (done) {
-       cleanDb(done);
-     });
+  describe('#add entity to group', function () {
 
-     it('should reject with 404 error when there is no entity with attribute value and type', function (done) {
-       var idmcore = new IdmCore(conf);
-       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
-       idmcore.listEntitiesByAttributeValueAndType(token, "ss", "unexistent-stuff")
-         .then(function (read) {
-           if (read instanceof Array && read.length == 0)
-             done();
-         }, function handlereject(error) {
+    afterEach(function (done) {
+      cleanDb(done);
+    });
 
-         }).catch(function (err) {
-           throw err;
-         });
+    it('should reject with 404 error when attempting to add a non existing entity to a group', function (done) {
+      var idmcore = new IdmCore(conf);
+      idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
+      var owner = token + "!@!" + "auth_type";
+      idmcore.createGroup(token, group_name)
+        .then(function (read) {
+          return idmcore.addEntityToGroup(token, group_name, owner, entity_id, entity_type);
+        }).then(function (res) {
 
-     });
+        }, function handlereject(error) {
+          if (error.statusCode == 404) {
+            done();
+          }
+        });
+    });
 
-     it('should get an entity based on attribute value and type', function (done) {
-       var idmcore = new IdmCore(conf);
-       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
-       var entity = clone(entity_1);
-       var entity2 = clone(entity_1);
-       var lookedfor = "123123";
-       entity2.token = lookedfor;
-       idmcore.createEntity(token, entity_id, entity_type, entity2)
-         .then(function (data) {
-           if (entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
-             delete data.id;
-             delete data.type;
-             delete data.owner;
-             if (deepdif.diff(data, entity2) == undefined)
-               return idmcore.createEntity(token, "someotherid", entity_type, entity)
-           }
-         }).then(function (data) {
-           if ("someotherid" == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
-             delete data.id;
-             delete data.type;
-             delete data.owner;
-             if (deepdif.diff(data, entity) == undefined)
-               return idmcore.listEntitiesByAttributeValueAndType(token, "token", lookedfor);
-           }
-         }).then(function (list) {
-           if (list.length == 1) {
-             var data = list[0];
-             if (data.token == lookedfor && entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") //more detailed checks in cases when there is only one or more are executed in the sqlite3 tests
-               done();
+    it('should reject with 404 error when attempting to add an exiting entity to a non existing group', function (done) {
+      var idmcore = new IdmCore(conf);
+      idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
+      var owner = token + "!@!" + "auth_type";
+      idmcore.createEntity(token, entity_id, entity_type, entity_1)
+        .then(function (read) {
+          return idmcore.addEntityToGroup(token, group_name, owner, entity_id, entity_type);
+        }).then(function (res) {
 
-           }
-           //return idmcore.readEntity(token, entity_id, entity_type);
-         }).then(function (read) {
+        }, function handlereject(error) {
+          if (error.statusCode == 404) {
+            done();
+          }
+        });
+    });
 
-         }, function handlereject(error) {
-           throw error;
-         }).catch(function (err) {
-           throw err;
-         });
+    it('should resolve with a modified entity after adding it to a gorup', function (done) {
+      var idmcore = new IdmCore(conf);
+      idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
+      var owner = token + "!@!" + "auth_type";
+      var ps = [idmcore.createEntity(token, entity_id, entity_type, entity_1),idmcore.createGroup(token, group_name)];
+      Promise.all(ps)
+        .then(function (read) {
+          return idmcore.addEntityToGroup(token, group_name, owner, entity_id, entity_type);
+        }).then(function (res) {
+          return idmcore.readEntity(token,entity_id, entity_type);
+        }).then(function(entityFinal){
+          if (entityFinal.groups.filter(function (v) {
+              return (group_name == v.group_name && v.owner == owner);
+            }).length == 1)
+            done();
+        }, function handlereject(error) {
+        });
+    });
 
-     });
-
-   });*/
+  });
 });
