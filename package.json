@@ -9,11 +9,10 @@
   },
   "dependencies": {
     "agile-idm-client": "git+https://github.com/Agile-IoT/agile-idm-client",
+    "agile-idm-entity-storage": "git+https://github.com/Agile-IoT/agile-idm-entity-storage",
     "clone": "1.0.2",
     "http-errors": "^1.5.0",
-    "jsonschema": "^1.1.0",
-    "level": "^1.5.0",
-    "level-transactions": "^2.1.4"
+    "jsonschema": "^1.1.0"
   },
   "devDependencies": {
     "assert": "1.4.1",
@@ -37,5 +36,5 @@
     "Gateway"
   ],
   "author": "nopbyte",
-  "license": "Apache-2.0"
+  "license": "MIT"
 }

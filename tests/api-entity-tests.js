@@ -4,7 +4,7 @@ var assert = require('assert');
 var deepdif = require('deep-diff');
 var createError = require('http-errors');
 var fs = require('fs');
-var EntityStorage = require('../lib/storage/level-storage');
+var dbconnection = require('agile-idm-entity-storage').connectionPool;
 var db;
 //conf for the API (components such as storage and authentication for the API may be replaced during tests)
 var dbName = "./database";
@@ -58,16 +58,9 @@ var authMockOK = {
 }
 
 function cleanDb(done) {
-  db.close().then(function () {
-    //console.log('db closed');
+  dbconnection("disconnect").then(function () {
     rmdir(dbName + "_entities", function (err, dirs, files) {
-      /*console.log(dirs);
-      console.log(files);
-      console.log('all files for entities are removed');*/
       rmdir(dbName + "_groups", function (err, dirs, files) {
-        /*console.log(dirs);
-        console.log(files);
-        console.log('all files for groups are removed');*/
         db = null;
         done();
       });
@@ -77,19 +70,7 @@ function cleanDb(done) {
   });
 }
 
-//NOTE connection is mocked to have a connection that is reset after each test (but only after each test!) A bit different that level-storage test.
-var dbconnection = function (conf) {
-  return new Promise(function (resolve, reject) {
-    if (db)
-      resolve(db);
-    else { //this happens at the beginning (and only at the beginning) of every test
-      db = new EntityStorage();
-      db.init(conf.storage, function (result) {
-        return resolve(db);
-      });
-    }
-  });
-}
+
 
 var PdpMockOk = {
   canRead: function (userInfo, entityInfo) {
