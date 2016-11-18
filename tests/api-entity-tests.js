@@ -70,8 +70,6 @@ function cleanDb(done) {
   });
 }
 
-
-
 var PdpMockOk = {
   canRead: function (userInfo, entityInfo) {
     return new Promise(function (resolve, reject) {
@@ -272,7 +270,10 @@ describe('Entities Api', function () {
     it('should reject with 404 error when there is no entity with attribute value and type', function (done) {
       var idmcore = new IdmCore(conf);
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
-      idmcore.listEntitiesByAttributeValueAndType(token, [{attribute_type:"ss", attribute_value:"unexistent-stuff"}])
+      idmcore.listEntitiesByAttributeValueAndType(token, [{
+          attribute_type: "ss",
+          attribute_value: "unexistent-stuff"
+        }])
         .then(function (read) {
           if (read instanceof Array && read.length == 0)
             done();
@@ -306,7 +307,10 @@ describe('Entities Api', function () {
             delete data.type;
             delete data.owner;
             if (deepdif.diff(data, entity) == undefined)
-              return idmcore.listEntitiesByAttributeValueAndType(token, [{attribute_type:"token",  attribute_value:lookedfor}]);
+              return idmcore.listEntitiesByAttributeValueAndType(token, [{
+                attribute_type: "token",
+                attribute_value: lookedfor
+              }]);
           }
         }).then(function (list) {
           if (list.length == 1) {
@@ -348,7 +352,10 @@ describe('Entities Api', function () {
             delete data.type;
             delete data.owner;
             if (deepdif.diff(data, entity) == undefined)
-              return idmcore.listEntitiesByAttributeValueAndType(token, [{attribute_type:"token",  attribute_value:lookedfor}],entity_type);
+              return idmcore.listEntitiesByAttributeValueAndType(token, [{
+                attribute_type: "token",
+                attribute_value: lookedfor
+              }], entity_type);
           }
         }).then(function (list) {
           if (list.length == 1) {
@@ -390,12 +397,15 @@ describe('Entities Api', function () {
             delete data.type;
             delete data.owner;
             if (deepdif.diff(data, entity) == undefined)
-              return idmcore.listEntitiesByAttributeValueAndType(token, [{attribute_type:"token",  attribute_value:lookedfor}],"unexistent_entity_typoe");
+              return idmcore.listEntitiesByAttributeValueAndType(token, [{
+                attribute_type: "token",
+                attribute_value: lookedfor
+              }], "unexistent_entity_typoe");
           }
         }).then(function (list) {
-          console.log('list '+JSON.stringify(list));
+          console.log('list ' + JSON.stringify(list));
           if (list.length == 0) {
-              done();
+            done();
 
           }
           //return idmcore.readEntity(token, entity_id, entity_type);
