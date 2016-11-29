@@ -32,7 +32,13 @@ var conf = {
     "required": ["name"]
   }]
 };
-
+var user_info ={
+  id: "6328602477442473!@!auth_type",
+  entity_type: "/User",
+  user_name: "6328602477442473",
+  auth_type: "auth_type",
+  owner: "6328602477442473!@!auth_type"
+};
 //default data for the tests
 var token = "6328602477442473";
 var action = "create";
@@ -130,7 +136,7 @@ describe('Groups Api', function () {
       var idmcore = new IdmCore(conf);
       var owner = token + "!@!" + "auth_type";
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
-      idmcore.readGroup(token, group_name, owner)
+      idmcore.readGroup(user_info, group_name, owner)
         .then(function (read) {}, function handlereject(error) {
           if (error.statusCode == 404) {
             done();
@@ -146,10 +152,10 @@ describe('Groups Api', function () {
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
       var entity = clone(entity_1);
       var owner = token + "!@!" + "auth_type";
-      idmcore.createGroup(token, group_name)
+      idmcore.createGroup(user_info, group_name)
         .then(function (data) {
           if (group_name === data.group_name && data.owner === owner) {
-            return idmcore.readGroup(token, group_name, owner);
+            return idmcore.readGroup(user_info, group_name, owner);
           }
         }).then(function (read) {
           if (group_name == read.group_name && read.owner === owner) {
@@ -172,7 +178,7 @@ describe('Groups Api', function () {
     it('should reject with 404 error when attemtpting to delete data is not there', function (done) {
       var idmcore = new IdmCore(conf);
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
-      idmcore.deleteGroup(token, group_name, "unesistent owner")
+      idmcore.deleteGroup(user_info, group_name, "unesistent owner")
         .then(function (read) {}, function handlereject(error) {
           if (error.statusCode == 404) {
             done();
@@ -187,12 +193,12 @@ describe('Groups Api', function () {
       var idmcore = new IdmCore(conf);
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
       var owner = token + "!@!" + "auth_type";
-      idmcore.createGroup(token, group_name)
+      idmcore.createGroup(user_info, group_name)
         .then(function (data) {
           if (group_name === data.group_name && data.owner === owner)
-            return idmcore.deleteGroup(token, group_name, owner);
+            return idmcore.deleteGroup(user_info, group_name, owner);
         }).then(function () {
-          return idmcore.readGroup(token, group_name, owner);
+          return idmcore.readGroup(user_info, group_name, owner);
         }).then(function () {
           throw new Error("should not return anything");
         }, function handlereject(error) {
@@ -214,9 +220,9 @@ describe('Groups Api', function () {
       var idmcore = new IdmCore(conf);
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
       var owner = token + "!@!" + "auth_type";
-      idmcore.createGroup(token, group_name)
+      idmcore.createGroup(user_info, group_name)
         .then(function (read) {
-          return idmcore.addEntityToGroup(token, group_name, owner, entity_id, entity_type);
+          return idmcore.addEntityToGroup(user_info, group_name, owner, entity_id, entity_type);
         }).then(function (res) {
 
         }, function handlereject(error) {
@@ -230,9 +236,9 @@ describe('Groups Api', function () {
       var idmcore = new IdmCore(conf);
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
       var owner = token + "!@!" + "auth_type";
-      idmcore.createEntity(token, entity_id, entity_type, entity_1)
+      idmcore.createEntity(user_info, entity_id, entity_type, entity_1)
         .then(function (read) {
-          return idmcore.addEntityToGroup(token, group_name, owner, entity_id, entity_type);
+          return idmcore.addEntityToGroup(user_info, group_name, owner, entity_id, entity_type);
         }).then(function (res) {
 
         }, function handlereject(error) {
@@ -246,12 +252,12 @@ describe('Groups Api', function () {
       var idmcore = new IdmCore(conf);
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
       var owner = token + "!@!" + "auth_type";
-      var ps = [idmcore.createEntity(token, entity_id, entity_type, entity_1), idmcore.createGroup(token, group_name)];
+      var ps = [idmcore.createEntity(user_info, entity_id, entity_type, entity_1), idmcore.createGroup(user_info, group_name)];
       Promise.all(ps)
         .then(function (read) {
-          return idmcore.addEntityToGroup(token, group_name, owner, entity_id, entity_type);
+          return idmcore.addEntityToGroup(user_info, group_name, owner, entity_id, entity_type);
         }).then(function (res) {
-          return idmcore.readEntity(token, entity_id, entity_type);
+          return idmcore.readEntity(user_info, entity_id, entity_type);
         }).then(function (entityFinal) {
           if (entityFinal.groups.filter(function (v) {
               return (group_name == v.group_name && v.owner == owner);
@@ -272,9 +278,9 @@ describe('Groups Api', function () {
       var idmcore = new IdmCore(conf);
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
       var owner = token + "!@!" + "auth_type";
-      idmcore.createGroup(token, group_name)
+      idmcore.createGroup(user_info, group_name)
         .then(function (read) {
-          return idmcore.removeEntityFromGroup(token, group_name, owner, entity_id, entity_type);
+          return idmcore.removeEntityFromGroup(user_info, group_name, owner, entity_id, entity_type);
         }).then(function (res) {
 
         }, function handlereject(error) {
@@ -288,9 +294,9 @@ describe('Groups Api', function () {
       var idmcore = new IdmCore(conf);
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
       var owner = token + "!@!" + "auth_type";
-      idmcore.createEntity(token, entity_id, entity_type, entity_1)
+      idmcore.createEntity(user_info, entity_id, entity_type, entity_1)
         .then(function (read) {
-          return idmcore.removeEntityFromGroup(token, group_name, owner, entity_id, entity_type);
+          return idmcore.removeEntityFromGroup(user_info, group_name, owner, entity_id, entity_type);
         }).then(function (res) {
 
         }, function handlereject(error) {
@@ -308,19 +314,19 @@ describe('Groups Api', function () {
       var idmcore = new IdmCore(conf);
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
       var owner = token + "!@!" + "auth_type";
-      var ps = [idmcore.createEntity(token, entity_id, entity_type, entity_1), idmcore.createGroup(token, group_name)];
+      var ps = [idmcore.createEntity(user_info, entity_id, entity_type, entity_1), idmcore.createGroup(user_info, group_name)];
       Promise.all(ps)
         .then(function (read) {
-          return idmcore.addEntityToGroup(token, group_name, owner, entity_id, entity_type);
+          return idmcore.addEntityToGroup(user_info, group_name, owner, entity_id, entity_type);
         }).then(function (res) {
-          return idmcore.readEntity(token, entity_id, entity_type);
+          return idmcore.readEntity(user_info, entity_id, entity_type);
         }).then(function (entityFinal) {
           if (entityFinal.groups.filter(function (v) {
               return (group_name == v.group_name && v.owner == owner);
             }).length == 1)
-            return idmcore.removeEntityFromGroup(token, group_name, owner, entity_id, entity_type);
+            return idmcore.removeEntityFromGroup(user_info, group_name, owner, entity_id, entity_type);
         }).then(function () {
-          return idmcore.readEntity(token, entity_id, entity_type);
+          return idmcore.readEntity(user_info, entity_id, entity_type);
         }).then(function (entityFinal) {
           if (entityFinal.groups.filter(function (v) {
               return (group_name == v.group_name && v.owner == owner);

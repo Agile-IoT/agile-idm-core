@@ -34,6 +34,14 @@ var conf = {
 
 //default data for the tests
 var token = "6328602477442473";
+var user_info ={
+  id: "6328602477442473!@!auth_type",
+  entity_type: "/User",
+  user_name: "6328602477442473",
+  auth_type: "auth_type",
+  owner: "6328602477442473!@!auth_type"
+};
+
 var action = "create";
 var entity_type = "/Sensor";
 var entity_id = "323";
@@ -114,7 +122,7 @@ describe('Entities Api', function () {
     it('should reject with 404 error when data is not there', function (done) {
       var idmcore = new IdmCore(conf);
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
-      idmcore.readEntity(token, entity_id, entity_type)
+      idmcore.readEntity(user_info, entity_id, entity_type)
         .then(function (read) {
           throw new Error('unexpec')
         }, function handlereject(error) {
@@ -131,7 +139,7 @@ describe('Entities Api', function () {
       var idmcore = new IdmCore(conf);
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
       var entity = clone(entity_1);
-      idmcore.createEntity(token, entity_id, entity_type, entity)
+      idmcore.createEntity(user_info, entity_id, entity_type, entity)
         .then(function (data) {
           if (entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
             delete data.id;
@@ -165,7 +173,7 @@ describe('Entities Api', function () {
     it('should reject with 404 error when attempting to update data that is not there', function (done) {
       var idmcore = new IdmCore(conf);
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
-      idmcore.setEntityAttribute(token, entity_id, entity_type, "attributename", "value")
+      idmcore.setEntityAttribute(user_info, entity_id, entity_type, "attributename", "value")
         .then(function (read) {}, function handlereject(error) {
           if (error.statusCode == 404) {
             done();
@@ -179,7 +187,7 @@ describe('Entities Api', function () {
       var data2;
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
       var entity = clone(entity_1);
-      idmcore.createEntity(token, entity_id, entity_type, entity)
+      idmcore.createEntity(user_info, entity_id, entity_type, entity)
         .then(function (data) {
           if (entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
             delete data.id;
@@ -188,7 +196,7 @@ describe('Entities Api', function () {
             if (deepdif.diff(data, entity) == undefined) {
               data2 = clone(data);
               data2.name = "somenewname";
-              return idmcore.setEntityAttribute(token, entity_id, entity_type, "name", "somenewname");
+              return idmcore.setEntityAttribute(user_info, entity_id, entity_type, "name", "somenewname");
             }
           }
         }).then(function (result) {
@@ -197,7 +205,7 @@ describe('Entities Api', function () {
             delete result.type;
             delete result.owner;
             if (deepdif.diff(result, data2) == undefined)
-              return idmcore.readEntity(token, entity_id, entity_type);
+              return idmcore.readEntity(user_info, entity_id, entity_type);
           }
         })
         .then(function (read) {
@@ -224,7 +232,7 @@ describe('Entities Api', function () {
     it('should reject with 404 error when attemtpting to delete data is not there', function (done) {
       var idmcore = new IdmCore(conf);
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
-      idmcore.deleteEntity(token, entity_id, entity_type)
+      idmcore.deleteEntity(user_info, entity_id, entity_type)
         .then(function (read) {}, function handlereject(error) {
           if (error.statusCode == 404) {
             done();
@@ -238,17 +246,17 @@ describe('Entities Api', function () {
       var idmcore = new IdmCore(conf);
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
       var entity = clone(entity_1);
-      idmcore.createEntity(token, entity_id, entity_type, entity)
+      idmcore.createEntity(user_info, entity_id, entity_type, entity)
         .then(function (data) {
           if (entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
             delete data.id;
             delete data.type;
             delete data.owner;
             if (deepdif.diff(data, entity) == undefined)
-              return idmcore.deleteEntity(token, entity_id, entity_type);
+              return idmcore.deleteEntity(user_info, entity_id, entity_type);
           }
         }).then(function () {
-          return idmcore.readEntity(token, entity_id, entity_type);
+          return idmcore.readEntity(user_info, entity_id, entity_type);
         }).then(function (read) {
 
         }, function handlereject(error) {
@@ -270,7 +278,7 @@ describe('Entities Api', function () {
     it('should reject with 404 error when there is no entity with attribute value and type', function (done) {
       var idmcore = new IdmCore(conf);
       idmcore.setMocks(authMockOK, null, null, PdpMockOk, dbconnection);
-      idmcore.listEntitiesByAttributeValueAndType(token, [{
+      idmcore.listEntitiesByAttributeValueAndType(user_info, [{
           attribute_type: "ss",
           attribute_value: "unexistent-stuff"
         }])
@@ -292,14 +300,14 @@ describe('Entities Api', function () {
       var entity2 = clone(entity_1);
       var lookedfor = "123123";
       entity2.token = lookedfor;
-      idmcore.createEntity(token, entity_id, entity_type, entity2)
+      idmcore.createEntity(user_info, entity_id, entity_type, entity2)
         .then(function (data) {
           if (entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
             delete data.id;
             delete data.type;
             delete data.owner;
             if (deepdif.diff(data, entity2) == undefined)
-              return idmcore.createEntity(token, "someotherid", entity_type, entity)
+              return idmcore.createEntity(user_info, "someotherid", entity_type, entity)
           }
         }).then(function (data) {
           if ("someotherid" == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
@@ -307,7 +315,7 @@ describe('Entities Api', function () {
             delete data.type;
             delete data.owner;
             if (deepdif.diff(data, entity) == undefined)
-              return idmcore.listEntitiesByAttributeValueAndType(token, [{
+              return idmcore.listEntitiesByAttributeValueAndType(user_info, [{
                 attribute_type: "token",
                 attribute_value: lookedfor
               }]);
@@ -337,14 +345,14 @@ describe('Entities Api', function () {
       var entity2 = clone(entity_1);
       var lookedfor = "123123";
       entity2.token = lookedfor;
-      idmcore.createEntity(token, entity_id, entity_type, entity2)
+      idmcore.createEntity(user_info, entity_id, entity_type, entity2)
         .then(function (data) {
           if (entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
             delete data.id;
             delete data.type;
             delete data.owner;
             if (deepdif.diff(data, entity2) == undefined)
-              return idmcore.createEntity(token, "someotherid", entity_type, entity)
+              return idmcore.createEntity(user_info, "someotherid", entity_type, entity)
           }
         }).then(function (data) {
           if ("someotherid" == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
@@ -382,14 +390,14 @@ describe('Entities Api', function () {
       var entity2 = clone(entity_1);
       var lookedfor = "123123";
       entity2.token = lookedfor;
-      idmcore.createEntity(token, entity_id, entity_type, entity2)
+      idmcore.createEntity(user_info, entity_id, entity_type, entity2)
         .then(function (data) {
           if (entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
             delete data.id;
             delete data.type;
             delete data.owner;
             if (deepdif.diff(data, entity2) == undefined)
-              return idmcore.createEntity(token, "someotherid", entity_type, entity)
+              return idmcore.createEntity(user_info, "someotherid", entity_type, entity)
           }
         }).then(function (data) {
           if ("someotherid" == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
@@ -397,7 +405,7 @@ describe('Entities Api', function () {
             delete data.type;
             delete data.owner;
             if (deepdif.diff(data, entity) == undefined)
-              return idmcore.listEntitiesByAttributeValueAndType(token, [{
+              return idmcore.listEntitiesByAttributeValueAndType(user_info, [{
                 attribute_type: "token",
                 attribute_value: lookedfor
               }], "unexistent_entity_typoe");
