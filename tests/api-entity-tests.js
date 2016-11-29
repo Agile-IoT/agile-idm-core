@@ -34,7 +34,7 @@ var conf = {
 
 //default data for the tests
 var token = "6328602477442473";
-var user_info ={
+var user_info = {
   id: "6328602477442473!@!auth_type",
   entity_type: "/User",
   user_name: "6328602477442473",
