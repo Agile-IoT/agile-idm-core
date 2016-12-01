@@ -398,7 +398,6 @@ describe('Entities Api', function () {
               }], "unexistent_entity_typoe");
           }
         }).then(function (list) {
-          console.log('list ' + JSON.stringify(list));
           if (list.length == 0) {
             done();
 
