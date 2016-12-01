@@ -8,7 +8,7 @@
     "test": "tests"
   },
   "dependencies": {
-    "agile-idm-entity-storage": "git+https://github.com/Agile-IoT/agile-idm-entity-storage",
+    "agile-idm-entity-storage": "git+https://github.com/Agile-IoT/agile-idm-entity-storage#v1.0.0",
     "clone": "1.0.2",
     "http-errors": "^1.5.0",
     "jsonschema": "^1.1.0"
