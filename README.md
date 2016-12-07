@@ -22,7 +22,7 @@ This component can be imported as a node.js module, and offers a promise-based A
 * add and remove entities to a group (equivalent to group update).
 * look up entities for a given set of attribute values. For instance, it is possible to find entities with a particular owner and attribute name equal to "my sensor".
 
-For usage examples, this component is currently used to expose an http-based version of all the calls herein in the AGILE-IDM-WEB api (see https://github.com/Agile-IoT/agile-idm-web-ui/tree/master/routes/api). Also, every functionality is constantly tested with unit test which verify response or expected status codes in the test folder of the AGILE IDM Core github repository.
+Although this component is only used by AGILE-IDM Web, in case the reader is interested in usage examples, this component is currently used to expose an http-based version of all the calls in the AGILE-IDM-WEB api (see https://github.com/Agile-IoT/agile-idm-web-ui/tree/master/routes/api). Also, given that every functionality is tested with unit test which verify response or expected status codes in the test folder of the AGILE IDM Core github repository, tests could also be used as a starting point to interact with the AGILE IDM Core node js module.
 
 # Debug mode
 
