@@ -13,6 +13,8 @@ In short, the main responsibilities of this component include:
 * attribute management and managing ownership: on top of storing the attributes passed to the Agile IDM Core component, it also includes the owner as an attribute.
 * handling groups this component also allows to place and remove entities from groups.
 
+To fully understand how attribute policies help to manage identities, please check the attribute model documentation available in (https://github.com/Agile-IoT/agile-idm-web-ui/blob/master/docs/identity-model.md).
+
 ## API interface
 
 This component can be imported as a node.js module, and offers a promise-based API allowing the following operations:
