@@ -3,11 +3,10 @@ var IdmCore = require('../index');
 var idmcore = new IdmCore(conf);
 var token = "6328602477442473";
 var action = "create";
-var entity_type = "/Sensor";
+var entity_type = "/sensor";
 var entity_id = "323";
 var data = {
   "name": "Barack Obam2a",
-  "token": "DC 20500"
 };
 
 /*

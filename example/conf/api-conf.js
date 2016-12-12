@@ -1,60 +1,101 @@
+//{"target":{"type":"user"},"locks":[{"path":"hasId","args":["$owner"]}]
 module.exports = {
   "storage": {
-    "dbName": "./database"
+    "dbName": "./database_"
   },
-  "authentication": {
-    "web-server": "http://127.0.0.1:3000/api/",
+  "policies":{
+    "dbName":"./policies.json",
+    "create_entity_policy": [
+        // actions of an actor are not restricted a priori
+        { target : { type: "any" } },
+        { source : { type: "any" } }
+    ],
+    "top_level_policy": [
+        // all properties can be read by everyone
+        { target : { type: "any" } },
+        // all properties can only be changed by the owner of the entity
+        { source : { type: "user" }, locks : [ { lock : "isOwner" } ] }
+    ],
+    "attribute_level_policies": {
+      "user": {
+        "password": [
+            // the property can only be read by the user itself
+            { target : { type: "user" }, locks : [ { lock : "isOwner" } ] },
+            // the property can be set by the user itself and
+            { source : { type: "user" }, locks : [ { lock : "isOwner" } ] },
+            // by all users with role admin
+            { source : { type: "user" }, locks : [ { lock : "attrEq", args : [ "role", "admin" ] } ] }
+        ],
+        "role":  [
+            // can be read by everyone
+            { target : { type: "any" } },
+            // can only be changed by users with role admin
+            { source : { type: "user" }, locks : [ { lock : "attrEq", args : [ "role", "admin" ] } ] }
+        ]
+      },
+      "sensor": {
+        "credentials": [
+            // the property can only be read by the user itself
+            { target : { type: "user" }, locks : [ { lock : "isOwner" } ] },
+            // the property can be set by the user itself and
+            { source : { type: "user" }, locks : [ { lock : "isOwner" } ] }
+        ]
+      }
 
+    }
   },
   "schema-validation": [{
-    "id": "/Sensor",
+    "id": "/sensor",
     "type": "object",
     "properties": {
       "name": {
         "type": "string"
       },
-      "token": {
-        "type": "string"
+      "credentials": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "system": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        }
       }
     },
     "required": ["name"]
   }, {
-    "id": "/SimpleAddress",
+    "id": "/user",
     "type": "object",
     "properties": {
-      "lines": {
-        "type": "array",
-        "items": {
-          "type": "string"
-        }
-      },
-      "zip": {
+      "user_name": {
         "type": "string"
       },
-      "city": {
+      "auth_type": {
         "type": "string"
       },
-      "country": {
+      "password": {
         "type": "string"
       }
     },
-    "required": ["country", "lines"]
+    "required": ["user_name", "auth_type"]
   }, {
-    "id": "/SimplePerson",
+    "id": "/client",
     "type": "object",
     "properties": {
       "name": {
         "type": "string"
       },
-      "address": {
-        "$ref": "/SimpleAddress"
+      "clientSecret": {
+        "type": "string"
       },
-      "votes": {
-        "type": "integer",
-        "minimum": 1
+      "redirectURI": {
+        "type": "string"
       }
     },
-    "required": ["address"]
-
+    "required": ["name", "clientSecret", "redirectURI"]
   }]
-}
+};
