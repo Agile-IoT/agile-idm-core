@@ -120,7 +120,7 @@ var user_info = {
   owner: "6328602477442473!@!auth_type"
 };
 
-describe('Api', function () {
+describe('Api (Validation test)', function () {
 
   describe('#createEntity()', function () {
 
@@ -136,7 +136,6 @@ describe('Api', function () {
       idmcore.setMocks(null, null, PdpMockOk, dbconnection);
       idmcore.createEntity(user_info, entity_id, entity_type, entity)
         .then(function (read) {
-          console.log(err);
           throw new Error('unexpec')
         }, function handlereject(error) {
           if (error.statusCode == "400" && error.message.indexOf("SchemaError") > 0) {
