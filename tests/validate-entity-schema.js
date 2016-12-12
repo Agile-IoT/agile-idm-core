@@ -5,7 +5,6 @@ var fs = require('fs');
 
 //{"target":{"type":"user"},"locks":[{"path":"hasId","args":["$owner"]}]
 var dbName = "./database_";
-var needsCleanup = true; //variable to indicate whether reconnection to the db and cleaning files is required
 var conf = {
   "storage": {
     "dbName": dbName
@@ -16,18 +15,18 @@ var conf = {
     "properties": {
       "name": {
         "type": "string"
-      }
-    },
-    "credentials": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "system": {
-            "type": "string"
-          },
-          "value": {
-            "type": "string"
+      },
+      "credentials": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "system": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
           }
         }
       }
@@ -141,7 +140,6 @@ describe('Api', function () {
           throw new Error('unexpec')
         }, function handlereject(error) {
           if (error.statusCode == "400" && error.message.indexOf("SchemaError") > 0) {
-            needsCleanup = false;
             done();
           }
         });
@@ -159,7 +157,7 @@ describe('Api', function () {
       idmcore.setMocks(null, null, PdpMockOk, dbconnection);
       idmcore.createEntity(user_info, entity_id, entity_type, entity)
         .then(function (res) {
-          needsCleanup = false;
+
           done();
         }, function handlereject(error) {
           throw new Error("unexpected error " + error);
@@ -182,16 +180,12 @@ describe('Api', function () {
       .then(function (res) {
         throw new Error("unexpected " + res);
       }, function handlereject(error) {
-        console.log(error);
-
         if (error.statusCode == 400) {
-          console.log(error);
-          needsCleanup = true;
           done();
         }
       });
 
   });
 
-  
+
 });
