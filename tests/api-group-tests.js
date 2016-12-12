@@ -18,8 +18,115 @@ var conf = {
     "web-server": "nowhere...",
 
   },
+  "policies": {
+    "dbName": "./policies.json",
+    "create_entity_policy": [
+      // actions of an actor are not restricted a priori
+      {
+        target: {
+          type: "any"
+        }
+      }, {
+        source: {
+          type: "any"
+        }
+      }
+    ],
+    "top_level_policy": [
+      // all properties can be read by everyone
+      {
+        target: {
+          type: "any"
+        }
+      },
+      // all properties can only be changed by the owner of the entity
+      {
+        source: {
+          type: "user"
+        },
+        locks: [{
+          lock: "isOwner"
+        }]
+      }
+    ],
+    "attribute_level_policies": {
+      "user": {
+        "password": [
+          // the property can only be read by the user itself
+          {
+            target: {
+              type: "user"
+            },
+            locks: [{
+              lock: "isOwner"
+            }]
+          },
+          // the property can be set by the user itself and
+          {
+            source: {
+              type: "user"
+            },
+            locks: [{
+              lock: "isOwner"
+            }]
+          },
+          // by all users with role admin
+          {
+            source: {
+              type: "user"
+            },
+            locks: [{
+              lock: "attrEq",
+              args: ["role", "admin"]
+            }]
+          }
+        ],
+        "role": [
+          // can be read by everyone
+          {
+            target: {
+              type: "any"
+            }
+          },
+          // can only be changed by users with role admin
+          {
+            source: {
+              type: "user"
+            },
+            locks: [{
+              lock: "attrEq",
+              args: ["role", "admin"]
+            }]
+          }
+        ]
+      },
+      "sensor": {
+        "credentials": [
+          // the property can only be read by the user itself
+          {
+            target: {
+              type: "user"
+            },
+            locks: [{
+              lock: "isOwner"
+            }]
+          },
+          // the property can be set by the user itself and
+          {
+            source: {
+              type: "user"
+            },
+            locks: [{
+              lock: "isOwner"
+            }]
+          }
+        ]
+      }
+
+    }
+  },
   "schema-validation": [{
-    "id": "/Sensor",
+    "id": "/sensor",
     "type": "object",
     "properties": {
       "name": {
@@ -34,7 +141,7 @@ var conf = {
 };
 var user_info = {
   id: "6328602477442473!@!auth_type",
-  entity_type: "/User",
+  entity_type: "/user",
   user_name: "6328602477442473",
   auth_type: "auth_type",
   owner: "6328602477442473!@!auth_type"
@@ -42,7 +149,7 @@ var user_info = {
 //default data for the tests
 var token = "6328602477442473";
 var action = "create";
-var entity_type = "/Sensor";
+var entity_type = "/sensor";
 var entity_id = "323";
 var entity_1 = {
   "name": "Barack Obam2a",

@@ -9,6 +9,113 @@ var conf = {
   "storage": {
     "dbName": dbName
   },
+  "policies": {
+    "dbName": "./policies.json",
+    "create_entity_policy": [
+      // actions of an actor are not restricted a priori
+      {
+        target: {
+          type: "any"
+        }
+      }, {
+        source: {
+          type: "any"
+        }
+      }
+    ],
+    "top_level_policy": [
+      // all properties can be read by everyone
+      {
+        target: {
+          type: "any"
+        }
+      },
+      // all properties can only be changed by the owner of the entity
+      {
+        source: {
+          type: "user"
+        },
+        locks: [{
+          lock: "isOwner"
+        }]
+      }
+    ],
+    "attribute_level_policies": {
+      "user": {
+        "password": [
+          // the property can only be read by the user itself
+          {
+            target: {
+              type: "user"
+            },
+            locks: [{
+              lock: "isOwner"
+            }]
+          },
+          // the property can be set by the user itself and
+          {
+            source: {
+              type: "user"
+            },
+            locks: [{
+              lock: "isOwner"
+            }]
+          },
+          // by all users with role admin
+          {
+            source: {
+              type: "user"
+            },
+            locks: [{
+              lock: "attrEq",
+              args: ["role", "admin"]
+            }]
+          }
+        ],
+        "role": [
+          // can be read by everyone
+          {
+            target: {
+              type: "any"
+            }
+          },
+          // can only be changed by users with role admin
+          {
+            source: {
+              type: "user"
+            },
+            locks: [{
+              lock: "attrEq",
+              args: ["role", "admin"]
+            }]
+          }
+        ]
+      },
+      "sensor": {
+        "credentials": [
+          // the property can only be read by the user itself
+          {
+            target: {
+              type: "user"
+            },
+            locks: [{
+              lock: "isOwner"
+            }]
+          },
+          // the property can be set by the user itself and
+          {
+            source: {
+              type: "user"
+            },
+            locks: [{
+              lock: "isOwner"
+            }]
+          }
+        ]
+      }
+
+    }
+  },
   "schema-validation": [{
     "id": "/sensor",
     "type": "object",
@@ -156,7 +263,6 @@ describe('Api (Validation test)', function () {
       idmcore.setMocks(null, null, PdpMockOk, dbconnection);
       idmcore.createEntity(user_info, entity_id, entity_type, entity)
         .then(function (res) {
-
           done();
         }, function handlereject(error) {
           throw new Error("unexpected error " + error);
@@ -185,6 +291,5 @@ describe('Api (Validation test)', function () {
       });
 
   });
-
 
 });

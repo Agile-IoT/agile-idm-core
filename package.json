@@ -11,7 +11,8 @@
     "agile-idm-entity-storage": "git+https://github.com/Agile-IoT/agile-idm-entity-storage#v1.0.0",
     "clone": "1.0.2",
     "http-errors": "^1.5.0",
-    "jsonschema": "^1.1.0"
+    "jsonschema": "^1.1.0",
+    "UPFROnt":"git+https://github.com/SEDARI/UPFROnt"
   },
   "devDependencies": {
     "assert": "1.4.1",
