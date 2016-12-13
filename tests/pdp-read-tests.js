@@ -267,7 +267,7 @@ describe('Api (PEP test)', function () {
       cleanDb(done);
     });
 
-    it('should resolve with an entity for different users (default policy allows this)', function (done) {
+    it('should resolve with a declassified entity for different users (password not there)', function (done) {
 
       var entity_id = "1";
       var entity_type = "/user";
@@ -282,8 +282,11 @@ describe('Api (PEP test)', function () {
         .then(function (res) {
           return idmcore.readEntity(user_info_auth, res.id, res.type);
         }).then(function (read) {
-          console.log('read! ' + JSON.stringify(read));
-          done();
+          if(read.hasOwnProperty("password")){
+            throw new Error("entity not properly declassified!");
+          }
+          else
+            done();
         }, function handlereject(error) {
           throw error;
         });
