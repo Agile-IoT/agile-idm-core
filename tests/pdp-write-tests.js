@@ -2,7 +2,7 @@ var IdmCore = require('../index');
 var dbconnection = require('agile-idm-entity-storage').connectionPool;
 var rmdir = require('rmdir');
 var fs = require('fs');
-
+var clone = require('clone');
 //{"target":{"type":"user"},"locks":[{"path":"hasId","args":["$owner"]}]
 var dbName = "./database_";
 var conf = {
@@ -222,34 +222,39 @@ var user_info = {
   "user_name": "alice",
   "auth_type": "agile-local",
   "password": "secret",
-  "id": "alice!@!agile-local",
-  "type": "/user",
   "role": "student",
   "owner": "alice!@!agile-local"
 };
+
+var user_info_auth = clone(user_info);
+user_info_auth.id = "alice!@!agile-local";
+user_info_auth.type = "/user";
+
 var admin = {
   "user_name": "bob",
   "auth_type": "agile-local",
   "password": "secret",
-  "id": "bob!@!agile-local",
-  "type": "/user",
   "role": "admin",
   "owner": "bob!@!agile-local"
 };
+
+var admin_auth = clone(admin);
+admin_auth.id = "bob!@!agile-local";
+admin_auth.type = "/user";
 
 describe('Api (PEP test)', function () {
 
   describe('#createEntity()', function () {
 
     beforeEach(function (done) {
-      var arr = [idmcore.getPap().setEntityPolicies(admin.id, admin.type),
-        idmcore.getStorage().createEntity(admin.id, admin.type, admin.id, admin)
+      var arr = [idmcore.getPap().setEntityPolicies(admin_auth.id, admin_auth.type),
+        idmcore.getStorage().createEntity(admin_auth.id, admin_auth.type, admin_auth.id, admin_auth)
       ];
       Promise.all(arr)
         .then(function () {
           //  we need to set owner by hand, because admin needs to be able to write to role (i.e. he has role admin)
           //  this is required when admin tries to create new admin users *but still, they own themselves*
-          return idmcore.createEntityAndSetOwner(admin, user_info.id, user_info.type, user_info, user_info.id);
+          return idmcore.createEntityAndSetOwner(admin_auth, user_info_auth.id, user_info_auth.type, user_info, user_info_auth.id);
         }).then(function () {
           console.log("user created!");
           done();
@@ -263,15 +268,17 @@ describe('Api (PEP test)', function () {
     });
 
     it('should reject with 403 and conflicts array in the object when attempting to create an entity without the proper role', function (done) {
+
       var entity_id = "1";
       var entity_type = "/user";
+      var owner = "username!@!some-type";
       var entity = {
-        "user_name": "some-id",
+        "user_name": "username",
         "auth_type": "some-type",
         "password": "value"
       }
       idmcore.setMocks(null, null, null, dbconnection);
-      idmcore.createEntity(user_info, entity_id, entity_type, entity)
+      idmcore.createEntityAndSetOwner(user_info_auth, entity_id, entity_type, entity, owner)
         .then(function (res) {
           throw new Error("unexpected. user not admin can create users!");
         }, function handlereject(error) {
@@ -280,23 +287,111 @@ describe('Api (PEP test)', function () {
             done();
         });
     });
+
+    it('should resolve with the entity when  attempting to create an entity with the proper role', function (done) {
+      var entity_id = "1";
+      var owner = "username!@!some-type";
+      var entity_type = "/user";
+      var entity = {
+        "user_name": "username",
+        "auth_type": "some-type",
+        "password": "value"
+      }
+      idmcore.setMocks(null, null, null, dbconnection);
+      idmcore.createEntityAndSetOwner(admin_auth, entity_id, entity_type, entity, owner)
+        .then(function (res) {
+          done();
+        }, function handlereject(error) {
+          throw error;
+        });
+
+    });
   });
 
-  it('should resolve with the entity when  attempting to create an entity with the proper role', function (done) {
-    var entity_id = "1";
-    var entity_type = "/user";
-    var entity = {
-      "user_name": "some-id",
-      "auth_type": "some-type",
-      "password": "value"
-    }
-    idmcore.setMocks(null, null, null, dbconnection);
-    idmcore.createEntity(admin, entity_id, entity_type, entity)
-      .then(function (res) {
-        done();
-      }, function handlereject(error) {
-        throw error;
-      });
+  describe('#setAttribute()', function () {
+
+    beforeEach(function (done) {
+      var arr = [idmcore.getPap().setEntityPolicies(admin_auth.id, admin_auth.type),
+        idmcore.getStorage().createEntity(admin_auth.id, admin_auth.type, admin_auth.id, admin_auth)
+      ];
+      Promise.all(arr)
+        .then(function () {
+          //  we need to set owner by hand, because admin needs to be able to write to role (i.e. he has role admin)
+          //  this is required when admin tries to create new admin users *but still, they own themselves*
+          return idmcore.createEntityAndSetOwner(admin_auth, user_info_auth.id, user_info_auth.type, user_info, user_info_auth.id);
+        }).then(function () {
+          done();
+        }, function (err) {
+          throw err;
+        })
+    });
+
+    afterEach(function (done) {
+
+      cleanDb(done);
+    });
+
+    it('should reject with 403 and conflicts array when attempting to update  an entity\'s attribute without the proper role and not owner', function (done) {
+      var entity_id = "1234";
+      var entity_type = "/user";
+      var owner = "username!@!some-type";
+      var entity = {
+        "user_name": "username",
+        "auth_type": "some-type",
+        "password": "value"
+      }
+      idmcore.setMocks(null, null, null, dbconnection);
+      idmcore.createEntityAndSetOwner(admin_auth, entity_id, entity_type, entity, owner)
+        .then(function (res) {
+          return idmcore.setEntityAttribute(user_info_auth, entity_id, entity_type, "role", "admin");
+        }).then(function () {
+          throw new Error("unexpected... the user can set the role without being admin!");
+        }, function handlereject(error) {
+          if (error.statusCode == "403" && error.conflicts.length > 0)
+            done();
+        });
+    });
+
+    it('should reject with 403 and conflicts array when an owner (non-admin) attempts to update  his own role', function (done) {
+      var entity_id = "1234";
+      var entity_type = "/user";
+      var owner = "username!@!some-type";
+      var entity = {
+        "user_name": "username",
+        "auth_type": "some-type",
+        "password": "value"
+      }
+      idmcore.setMocks(null, null, null, dbconnection);
+      idmcore.createEntityAndSetOwner(admin_auth, entity_id, entity_type, entity, owner)
+        .then(function (res) {
+          return idmcore.setEntityAttribute(res, entity_id, entity_type, "role", "admin");
+        }).then(function () {
+          throw new Error("unexpected... the user can set the role without being admin!");
+        }, function handlereject(error) {
+          if (error.statusCode == "403" && error.conflicts.length > 0)
+            done();
+        });
+    });
+
+    it('should resolve  when attempting to update  an entity attribute with the proper role', function (done) {
+      var entity_id = "1";
+      var entity_type = "/user";
+      var owner = "username!@!some-type";
+      var entity = {
+        "user_name": "username",
+        "auth_type": "some-type",
+        "password": "value"
+      }
+      idmcore.setMocks(null, null, null, dbconnection);
+      idmcore.createEntityAndSetOwner(admin_auth, entity_id, entity_type, entity, owner)
+        .then(function (res) {
+          return idmcore.setEntityAttribute(admin_auth, entity_id, entity_type, "role", "admin");
+        }).then(function () {
+          done();
+        }, function handlereject(error) {
+          throw error;
+        });
+    });
 
   });
 
