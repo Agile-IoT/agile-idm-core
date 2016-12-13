@@ -179,6 +179,13 @@ function cleanDb(c) {
   });
 }
 
+var pepMockOk = {
+  declassify : function (userInfo, entityInfo) {
+    return new Promise(function (resolve, reject) {
+      resolve(entityInfo);
+    });
+  }
+}
 var PdpMockOk = {
   canRead: function (userInfo, entityInfo) {
     return new Promise(function (resolve, reject) {
@@ -228,7 +235,7 @@ describe('Entities Api', function () {
 
     it('should reject with 404 error when data is not there', function (done) {
       var idmcore = new IdmCore(conf);
-      idmcore.setMocks(null, null, PdpMockOk, dbconnection);
+      idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
       idmcore.readEntity(user_info, entity_id, entity_type)
         .then(function (read) {
           throw new Error('unexpec')
@@ -244,7 +251,7 @@ describe('Entities Api', function () {
 
     it('should create an entity by id and return the same afterwards', function (done) {
       var idmcore = new IdmCore(conf);
-      idmcore.setMocks(null, null, PdpMockOk, dbconnection);
+      idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
       var entity = clone(entity_1);
       idmcore.createEntity(user_info, entity_id, entity_type, entity)
         .then(function (data) {
@@ -279,7 +286,7 @@ describe('Entities Api', function () {
 
     it('should reject with 404 error when attempting to update data that is not there', function (done) {
       var idmcore = new IdmCore(conf);
-      idmcore.setMocks(null, null, PdpMockOk, dbconnection);
+      idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
       idmcore.setEntityAttribute(user_info, entity_id, entity_type, "attributename", "value")
         .then(function (read) {}, function handlereject(error) {
           if (error.statusCode == 404) {
@@ -292,7 +299,7 @@ describe('Entities Api', function () {
     it('should update an entity by id and return the proper values afterwards', function (done) {
       var idmcore = new IdmCore(conf);
       var data2;
-      idmcore.setMocks(null, null, PdpMockOk, dbconnection);
+      idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
       var entity = clone(entity_1);
       idmcore.createEntity(user_info, entity_id, entity_type, entity)
         .then(function (data) {
@@ -338,7 +345,7 @@ describe('Entities Api', function () {
 
     it('should reject with 404 error when attemtpting to delete data is not there', function (done) {
       var idmcore = new IdmCore(conf);
-      idmcore.setMocks(null, null, PdpMockOk, dbconnection);
+      idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
       idmcore.deleteEntity(user_info, entity_id, entity_type)
         .then(function (read) {}, function handlereject(error) {
           if (error.statusCode == 404) {
@@ -351,7 +358,7 @@ describe('Entities Api', function () {
 
     it('should delete an entity by id', function (done) {
       var idmcore = new IdmCore(conf);
-      idmcore.setMocks(null, null, PdpMockOk, dbconnection);
+      idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
       var entity = clone(entity_1);
       idmcore.createEntity(user_info, entity_id, entity_type, entity)
         .then(function (data) {
@@ -384,7 +391,7 @@ describe('Entities Api', function () {
 
     it('should reject with 404 error when there is no entity with attribute value and type', function (done) {
       var idmcore = new IdmCore(conf);
-      idmcore.setMocks(null, null, PdpMockOk, dbconnection);
+      idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
       idmcore.listEntitiesByAttributeValueAndType(user_info, [{
           attribute_type: "ss",
           attribute_value: "unexistent-stuff"
@@ -402,7 +409,7 @@ describe('Entities Api', function () {
 
     it('should get an entity based on attribute value and type', function (done) {
       var idmcore = new IdmCore(conf);
-      idmcore.setMocks(null, null, PdpMockOk, dbconnection);
+      idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
       var entity = clone(entity_1);
       var entity2 = clone(entity_1);
       var lookedfor = "123123";
@@ -447,7 +454,7 @@ describe('Entities Api', function () {
 
     it('should get an entity based on attribute value and type and entity_type', function (done) {
       var idmcore = new IdmCore(conf);
-      idmcore.setMocks(null, null, PdpMockOk, dbconnection);
+      idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
       var entity = clone(entity_1);
       var entity2 = clone(entity_1);
       var lookedfor = "123123";
@@ -492,7 +499,7 @@ describe('Entities Api', function () {
 
     it('should not resolve with an entity when  attribute values and type match but entity_type does not', function (done) {
       var idmcore = new IdmCore(conf);
-      idmcore.setMocks(null, null, PdpMockOk, dbconnection);
+      idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
       var entity = clone(entity_1);
       var entity2 = clone(entity_1);
       var lookedfor = "123123";
