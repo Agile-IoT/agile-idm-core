@@ -155,7 +155,7 @@ var group_name = "group";
 
 function cleanDb(c) {
   //disconnect in any case.
-  function disconnect(done){
+  function disconnect(done) {
     dbconnection("disconnect").then(function () {
       rmdir(dbName + "_entities", function (err, dirs, files) {
         rmdir(dbName + "_groups", function (err, dirs, files) {
@@ -170,12 +170,11 @@ function cleanDb(c) {
   //if there is a policy file delete it
   fs.exists(conf.policies.dbName, function (exists) {
     if (exists) {
-      fs.unlink(conf.policies.dbName,function(){
-          disconnect(c);
+      fs.unlink(conf.policies.dbName, function () {
+        disconnect(c);
       });
-    }
-    else{
-       disconnect(c);
+    } else {
+      disconnect(c);
     }
   });
 }
@@ -221,6 +220,12 @@ var PdpMockOk = {
     return new Promise(function (resolve, reject) {
       //console.log('resolving with entities '+JSON.stringify(entities));
       resolve(entityInfo);
+    });
+  },
+  canWriteToAllAttributes: function (userInfo, entityInfo) {
+    return new Promise(function (resolve, reject) {
+      //console.log('resolving with entities '+JSON.stringify(entities));
+      resolve();
     });
   }
 

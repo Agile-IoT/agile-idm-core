@@ -38,6 +38,14 @@ var conf = {
         locks: [{
           lock: "isOwner"
         }]
+      }, {
+        source: {
+          type: "user"
+        },
+        locks: [{
+          lock: "attrEq",
+          args: ["role", "admin"]
+        }]
       }
     ],
     "attribute_level_policies": {
@@ -172,13 +180,23 @@ var conf = {
   }]
 };
 
+//override this object to get the pap for creating the fist user.
+IdmCore.prototype.getPap = function () {
+  return this.pap;
+};
+
+IdmCore.prototype.getStorage = function () {
+  return this.storage;
+}
+
+var idmcore = new IdmCore(conf);
+
 function cleanDb(c) {
   //disconnect in any case.
   function disconnect(done) {
     dbconnection("disconnect").then(function () {
       rmdir(dbName + "_entities", function (err, dirs, files) {
         rmdir(dbName + "_groups", function (err, dirs, files) {
-          db = null;
           done();
         });
       });
@@ -198,115 +216,86 @@ function cleanDb(c) {
   });
 }
 
-var PdpMockOk = {
-  canRead: function (userInfo, entityInfo) {
-    return new Promise(function (resolve, reject) {
-      resolve(entityInfo);
-    });
-  },
-  canDelete: function (userInfo, entityInfo) {
-    return new Promise(function (resolve, reject) {
-      resolve(entityInfo);
-    });
-  },
-  canReadArray: function (userInfo, entities) {
-    return new Promise(function (resolve, reject) {
-      //console.log('resolving with entities '+JSON.stringify(entities));
-      resolve(entities);
-    });
-  },
-  canWriteToAttribute: function (userInfo, entities, attributeName, attributeValue) {
-    return new Promise(function (resolve, reject) {
-      //console.log('resolving with entities '+JSON.stringify(entities));
-      resolve();
-    });
-  },
-  canUpdate: function (userInfo, entityInfo) {
-    return new Promise(function (resolve, reject) {
-      //console.log('resolving with entities '+JSON.stringify(entities));
-      resolve(entityInfo);
-    });
-  },
-  canWriteToAllAttributes: function (userInfo, entityInfo) {
-    return new Promise(function (resolve, reject) {
-      //console.log('resolving with entities '+JSON.stringify(entities));
-      resolve();
-    });
-  }
-
-};
-
 //default data for the tests
 var token = "6328602477442473";
 var user_info = {
-  id: "6328602477442473!@!auth_type",
-  entity_type: "/User",
-  user_name: "6328602477442473",
-  auth_type: "auth_type",
-  owner: "6328602477442473!@!auth_type"
+  "user_name": "alice",
+  "auth_type": "agile-local",
+  "password": "secret",
+  "id": "alice!@!agile-local",
+  "type": "/user",
+  "role": "student",
+  "owner": "alice!@!agile-local"
+};
+var admin = {
+  "user_name": "bob",
+  "auth_type": "agile-local",
+  "password": "secret",
+  "id": "bob!@!agile-local",
+  "type": "/user",
+  "role": "admin",
+  "owner": "bob!@!agile-local"
 };
 
-describe('Api (Validation test)', function () {
+describe('Api (PEP test)', function () {
 
   describe('#createEntity()', function () {
+
+    beforeEach(function (done) {
+      var arr = [idmcore.getPap().setEntityPolicies(admin.id, admin.type),
+        idmcore.getStorage().createEntity(admin.id, admin.type, admin.id, admin)
+      ];
+      Promise.all(arr)
+        .then(function () {
+          //  we need to set owner by hand, because admin needs to be able to write to role (i.e. he has role admin)
+          //  this is required when admin tries to create new admin users *but still, they own themselves*
+          return idmcore.createEntityAndSetOwner(admin, user_info.id, user_info.type, user_info, user_info.id);
+        }).then(function () {
+          console.log("user created!");
+          done();
+        }, function (err) {
+          throw err;
+        })
+    });
 
     afterEach(function (done) {
       cleanDb(done);
     });
 
-    it('should reject with 400 when an entity with a non-existing kind of entity is passed', function (done) {
-      var idmcore = new IdmCore(conf);
-      var entity_id = "1";
-      var entity_type = "/non-existent";
-      var entity = {};
-      idmcore.setMocks(null, null, PdpMockOk, dbconnection);
-      idmcore.createEntity(user_info, entity_id, entity_type, entity)
-        .then(function (read) {
-          throw new Error('unexpec')
-        }, function handlereject(error) {
-          if (error.statusCode == "400" && error.message.indexOf("SchemaError") > 0) {
-            done();
-          }
-        });
-    });
-
-    it('should create an entity when an entity a proper type and schema are provided', function (done) {
-      var idmcore = new IdmCore(conf);
+    it('should reject with 403 and conflicts array in the object when attempting to create an entity without the proper role', function (done) {
       var entity_id = "1";
       var entity_type = "/user";
       var entity = {
         "user_name": "some-id",
-        "auth_type": "some-type"
-
+        "auth_type": "some-type",
+        "password": "value"
       }
-      idmcore.setMocks(null, null, PdpMockOk, dbconnection);
+      idmcore.setMocks(null, null, null, dbconnection);
       idmcore.createEntity(user_info, entity_id, entity_type, entity)
         .then(function (res) {
-          done();
+          throw new Error("unexpected. user not admin can create users!");
         }, function handlereject(error) {
-          throw new Error("unexpected error " + error);
+          console.log("err" + error.statusCode)
+          if (error.statusCode === 403 && error.conflicts.length > 0)
+            done();
         });
     });
-
   });
 
-  it('should reject with 400 an entity when with an existing type but with an attribute missing ', function (done) {
-    var idmcore = new IdmCore(conf);
+  it('should resolve with the entity when  attempting to create an entity with the proper role', function (done) {
     var entity_id = "1";
     var entity_type = "/user";
     var entity = {
-      "user_name1": "some-id",
-      "auth_type": "some-type"
-
+      "user_name": "some-id",
+      "auth_type": "some-type",
+      "password": "value"
     }
-    idmcore.setMocks(null, null, PdpMockOk, dbconnection);
-    idmcore.createEntity(user_info, entity_id, entity_type, entity)
+    idmcore.setMocks(null, null, null, dbconnection);
+    idmcore.createEntity(admin, entity_id, entity_type, entity)
       .then(function (res) {
-        throw new Error("unexpected " + res);
+        done();
       }, function handlereject(error) {
-        if (error.statusCode == 400) {
-          done();
-        }
+        throw error;
       });
 
   });
