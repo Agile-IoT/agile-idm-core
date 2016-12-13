@@ -242,7 +242,7 @@ var admin_auth = clone(admin);
 admin_auth.id = "bob!@!agile-local";
 admin_auth.type = "/user";
 
-describe('Api (PEP test)', function () {
+describe('Api (PEP Read test)', function () {
 
   describe('#readEntity()', function () {
 
@@ -256,7 +256,6 @@ describe('Api (PEP test)', function () {
           //  this is required when admin tries to create new admin users *but still, they own themselves*
           return idmcore.createEntityAndSetOwner(admin_auth, user_info_auth.id, user_info_auth.type, user_info, user_info_auth.id);
         }).then(function () {
-          console.log("user created!");
           done();
         }, function (err) {
           throw err;
@@ -315,7 +314,7 @@ describe('Api (PEP test)', function () {
         }, function handlereject(error) {
           throw error;
         });
-    
+
   });
 
   it('should resolve with the entity when attempting to create an entity with the proper role', function (done) {
