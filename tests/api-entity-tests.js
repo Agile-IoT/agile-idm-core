@@ -13,10 +13,6 @@ var conf = {
   "storage": {
     "dbName": dbName
   },
-  "authentication": {
-    "web-server": "nowhere...",
-
-  },
   "policies": {
     "dbName": "./policies.json",
     "create_entity_policy": [
@@ -157,16 +153,30 @@ var entity_1 = {
   "token": "DC 20500"
 };
 
-function cleanDb(done) {
-  dbconnection("disconnect").then(function () {
-    rmdir(dbName + "_entities", function (err, dirs, files) {
-      rmdir(dbName + "_groups", function (err, dirs, files) {
-        db = null;
-        done();
+function cleanDb(c) {
+  //disconnect in any case.
+  function disconnect(done){
+    dbconnection("disconnect").then(function () {
+      rmdir(dbName + "_entities", function (err, dirs, files) {
+        rmdir(dbName + "_groups", function (err, dirs, files) {
+          db = null;
+          done();
+        });
       });
+    }, function () {
+      throw Error("not able to close database");
     });
-  }, function () {
-    throw Error("not able to close database");
+  }
+  //if there is a policy file delete it
+  fs.exists(conf.policies.dbName, function (exists) {
+    if (exists) {
+      fs.unlink(conf.policies.dbName,function(){
+          disconnect(c);
+      });
+    }
+    else{
+       disconnect(c);
+    }
   });
 }
 
