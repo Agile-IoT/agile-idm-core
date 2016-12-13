@@ -281,7 +281,6 @@ describe('Api (PEP Write Test)', function () {
         .then(function (res) {
           throw new Error("unexpected. user not admin can create users!");
         }, function handlereject(error) {
-          console.log("err" + error.statusCode)
           if (error.statusCode === 403 && error.conflicts.length > 0)
             done();
         });
