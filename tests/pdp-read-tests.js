@@ -281,10 +281,9 @@ describe('Api (PEP Read test)', function () {
         .then(function (res) {
           return idmcore.readEntity(user_info_auth, res.id, res.type);
         }).then(function (read) {
-          if(read.hasOwnProperty("password")){
+          if (read.hasOwnProperty("password")) {
             throw new Error("entity not properly declassified!");
-          }
-          else
+          } else
             done();
         }, function handlereject(error) {
           throw error;
@@ -304,38 +303,37 @@ describe('Api (PEP Read test)', function () {
       idmcore.createEntityAndSetOwner(admin_auth, entity_id, entity_type, entity, user_info_auth.owner)
         .then(function (res) {
           return idmcore.readEntity(user_info_auth, res.id, res.type);
-        }).then(function(data){
-          if(!data.hasOwnProperty("password")){
+        }).then(function (data) {
+          if (!data.hasOwnProperty("password")) {
             throw new Error("entity wrongly declassified, an entity was removed when it should not have been removed!");
-          }
-          else {
+          } else {
             done();
           }
         }, function handlereject(error) {
           throw error;
         });
 
-  });
+    });
 
-  it('should resolve with the entity when attempting to create an entity with the proper role', function (done) {
-    var entity_id = "1";
-    var owner = "username!@!some-type";
-    var entity_type = "/user";
-    var entity = {
-      "user_name": "username",
-      "auth_type": "some-type",
-      "password": "value"
-    }
-    idmcore.setMocks(null, null, null, dbconnection);
-    idmcore.createEntityAndSetOwner(admin_auth, entity_id, entity_type, entity, owner)
-      .then(function (res) {
-        done();
-      }, function handlereject(error) {
-        throw error;
-      });
+    it('should resolve with the entity when attempting to create an entity with the proper role', function (done) {
+      var entity_id = "1";
+      var owner = "username!@!some-type";
+      var entity_type = "/user";
+      var entity = {
+        "user_name": "username",
+        "auth_type": "some-type",
+        "password": "value"
+      }
+      idmcore.setMocks(null, null, null, dbconnection);
+      idmcore.createEntityAndSetOwner(admin_auth, entity_id, entity_type, entity, owner)
+        .then(function (res) {
+          done();
+        }, function handlereject(error) {
+          throw error;
+        });
 
+    });
   });
-});
 
   describe('#setAttribute()', function () {
 

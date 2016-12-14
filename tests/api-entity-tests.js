@@ -180,12 +180,18 @@ function cleanDb(c) {
 }
 
 var pepMockOk = {
-  declassify : function (userInfo, entityInfo) {
+  declassify: function (userInfo, entityInfo) {
     return new Promise(function (resolve, reject) {
       resolve(entityInfo);
     });
+  },
+  declassifyArray: function (userInfo, array) {
+    return new Promise(function (resolve, reject) {
+      resolve(array);
+    });
   }
-}
+};
+
 var PdpMockOk = {
   canRead: function (userInfo, entityInfo) {
     return new Promise(function (resolve, reject) {

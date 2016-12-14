@@ -193,12 +193,17 @@ function cleanDb(c) {
   });
 }*/
 var pepMockOk = {
-  declassify : function (userInfo, entityInfo) {
+  declassify: function (userInfo, entityInfo) {
     return new Promise(function (resolve, reject) {
       resolve(entityInfo);
     });
+  },
+  declassifyArray: function (userInfo, array) {
+    return new Promise(function (resolve, reject) {
+      resolve(array);
+    });
   }
-}
+};
 
 var PdpMockOk = {
   canRead: function (userInfo, entityInfo) {
@@ -250,7 +255,7 @@ describe('Groups Api', function () {
     it('should reject with 404 error when group is not there', function (done) {
       var idmcore = new IdmCore(conf);
       var owner = token + "!@!" + "auth_type";
-      idmcore.setMocks(null, null, PdpMockOk, dbconnection,pepMockOk);
+      idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
       idmcore.readGroup(user_info, group_name, owner)
         .then(function (read) {}, function handlereject(error) {
           if (error.statusCode == 404) {
@@ -292,7 +297,7 @@ describe('Groups Api', function () {
 
     it('should reject with 404 error when attemtpting to delete data is not there', function (done) {
       var idmcore = new IdmCore(conf);
-      idmcore.setMocks(null, null, PdpMockOk, dbconnection,pepMockOk);
+      idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
       idmcore.deleteGroup(user_info, group_name, "unesistent owner")
         .then(function (read) {}, function handlereject(error) {
           if (error.statusCode == 404) {
@@ -306,7 +311,7 @@ describe('Groups Api', function () {
     it('should delete a group  by id', function (done) {
 
       var idmcore = new IdmCore(conf);
-      idmcore.setMocks(null, null, PdpMockOk, dbconnection,pepMockOk);
+      idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
       var owner = token + "!@!" + "auth_type";
       idmcore.createGroup(user_info, group_name)
         .then(function (data) {
@@ -333,7 +338,7 @@ describe('Groups Api', function () {
 
     it('should reject with 404 error when attempting to add a non existing entity to a group', function (done) {
       var idmcore = new IdmCore(conf);
-      idmcore.setMocks(null, null, PdpMockOk, dbconnection,pepMockOk);
+      idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
       var owner = token + "!@!" + "auth_type";
       idmcore.createGroup(user_info, group_name)
         .then(function (read) {
@@ -349,7 +354,7 @@ describe('Groups Api', function () {
 
     it('should reject with 404 error when attempting to add an exiting entity to a non existing group', function (done) {
       var idmcore = new IdmCore(conf);
-      idmcore.setMocks(null, null, PdpMockOk, dbconnection,pepMockOk);
+      idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
       var owner = token + "!@!" + "auth_type";
       idmcore.createEntity(user_info, entity_id, entity_type, entity_1)
         .then(function (read) {
@@ -365,7 +370,7 @@ describe('Groups Api', function () {
 
     it('should resolve with a modified entity after adding it to a gorup', function (done) {
       var idmcore = new IdmCore(conf);
-      idmcore.setMocks(null, null, PdpMockOk, dbconnection,pepMockOk);
+      idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
       var owner = token + "!@!" + "auth_type";
       var ps = [idmcore.createEntity(user_info, entity_id, entity_type, entity_1), idmcore.createGroup(user_info, group_name)];
       Promise.all(ps)
