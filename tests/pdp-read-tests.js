@@ -335,7 +335,7 @@ describe('Api (PEP Read test)', function () {
     });
   });
 
-  describe('#setAttribute()', function () {
+  describe('#findEntitiesByAttribute()', function () {
 
     beforeEach(function (done) {
       var arr = [idmcore.getPap().setEntityPolicies(admin_auth.id, admin_auth.type),
@@ -358,6 +358,45 @@ describe('Api (PEP Read test)', function () {
       cleanDb(done);
     });
 
+    it('should resolve with an array without entities for which the attributes used in the query are not allowed to be read by the policy', function (done) {
+      var entity_id = "1";
+      var owner = "username!@!some-type";
+      var entity_type = "/user";
+      var entity = {
+        "user_name": "username",
+        "auth_type": "some-type",
+        "password": "value"
+      }
+      var new_user_auth;
+      idmcore.setMocks(null, null, null, dbconnection);
+
+      idmcore.createEntityAndSetOwner(admin_auth, entity_id, entity_type, entity, owner)
+        .then(function (user) {
+          new_user_auth = user;
+          var criteria = [{
+            attribute_type: "password",
+            attribute_value: "secret"
+          }];
+          var queries = [idmcore.listEntitiesByAttributeValueAndType(admin_auth, criteria),
+            idmcore.listEntitiesByAttributeValueAndType(user_info_auth, criteria),
+            idmcore.listEntitiesByAttributeValueAndType(new_user_auth, criteria)
+          ];
+          return Promise.all(queries);
+        })
+        .then(function (results) {
+          console.log("res :" + JSON.stringify(results));
+
+          if (results[0].length === 1 && admin_auth.id == results[0][0].id && //admin can only see his password
+            results[1].length === 1 && user_info_auth.id == results[1][0].id && //oehter user can only see his password
+            results[2].length === 0 //this user cannot see anything because eventhough he asked for the right password for other users, he doesn;t have access, and his password doesn't match
+          )
+            done();
+          else
+            throw new Error("unexpected result, should only see its own passowrd");
+        }, function handlereject(error) {
+          throw error;
+        });
+    });
   });
 
 });
