@@ -172,6 +172,14 @@ var conf = {
   }]
 };
 
+var pepMockOk = {
+  declassify : function (userInfo, entityInfo) {
+    return new Promise(function (resolve, reject) {
+      resolve(entityInfo);
+    });
+  }
+};
+
 function cleanDb(c) {
   //disconnect in any case.
   function disconnect(done) {
@@ -259,7 +267,7 @@ describe('Api (Validation test)', function () {
       var entity_id = "1";
       var entity_type = "/non-existent";
       var entity = {};
-      idmcore.setMocks(null, null, PdpMockOk, dbconnection);
+      idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
       idmcore.createEntity(user_info, entity_id, entity_type, entity)
         .then(function (read) {
           throw new Error('unexpec')
@@ -279,7 +287,7 @@ describe('Api (Validation test)', function () {
         "auth_type": "some-type"
 
       }
-      idmcore.setMocks(null, null, PdpMockOk, dbconnection);
+      idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
       idmcore.createEntity(user_info, entity_id, entity_type, entity)
         .then(function (res) {
           done();
@@ -299,7 +307,7 @@ describe('Api (Validation test)', function () {
       "auth_type": "some-type"
 
     }
-    idmcore.setMocks(null, null, PdpMockOk, dbconnection);
+    idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
     idmcore.createEntity(user_info, entity_id, entity_type, entity)
       .then(function (res) {
         throw new Error("unexpected " + res);
