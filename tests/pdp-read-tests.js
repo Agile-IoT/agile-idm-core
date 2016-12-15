@@ -219,6 +219,23 @@ function cleanDb(c) {
   });
 }
 
+function buildUsers(done) {
+
+  var arr = [idmcore.getPap().setEntityPolicies(admin_auth.id, admin_auth.type),
+    idmcore.getStorage().createEntity(admin_auth.id, admin_auth.type, admin_auth.id, admin_auth)
+  ];
+  Promise.all(arr)
+    .then(function () {
+      //  we need to set owner by hand, because admin needs to be able to write to role (i.e. he has role admin)
+      //  this is required when admin tries to create new admin users *but still, they own themselves*
+      return idmcore.createEntityAndSetOwner(admin_auth, user_info_auth.id, user_info_auth.type, user_info, user_info_auth.id);
+    }).then(function () {
+      done();
+    }, function (err) {
+      throw err;
+    });
+}
+
 //default data for the tests
 var token = "6328602477442473";
 var user_info = {
@@ -250,20 +267,9 @@ describe('Api (PEP Read test)', function () {
   describe('#readEntity()', function () {
 
     beforeEach(function (done) {
-      var arr = [idmcore.getPap().setEntityPolicies(admin_auth.id, admin_auth.type),
-        idmcore.getStorage().createEntity(admin_auth.id, admin_auth.type, admin_auth.id, admin_auth)
-      ];
-      Promise.all(arr)
-        .then(function () {
-          //  we need to set owner by hand, because admin needs to be able to write to role (i.e. he has role admin)
-          //  this is required when admin tries to create new admin users *but still, they own themselves*
-          return idmcore.createEntityAndSetOwner(admin_auth, user_info_auth.id, user_info_auth.type, user_info, user_info_auth.id);
-        }).then(function () {
-          done();
-        }, function (err) {
-          throw err;
-        })
+      buildUsers(done);
     });
+
 
     afterEach(function (done) {
       cleanDb(done);
@@ -341,20 +347,9 @@ describe('Api (PEP Read test)', function () {
   describe('#findEntitiesByAttribute()', function () {
 
     beforeEach(function (done) {
-      var arr = [idmcore.getPap().setEntityPolicies(admin_auth.id, admin_auth.type),
-        idmcore.getStorage().createEntity(admin_auth.id, admin_auth.type, admin_auth.id, admin_auth)
-      ];
-      Promise.all(arr)
-        .then(function () {
-          //  we need to set owner by hand, because admin needs to be able to write to role (i.e. he has role admin)
-          //  this is required when admin tries to create new admin users *but still, they own themselves*
-          return idmcore.createEntityAndSetOwner(admin_auth, user_info_auth.id, user_info_auth.type, user_info, user_info_auth.id);
-        }).then(function () {
-          done();
-        }, function (err) {
-          throw err;
-        })
+      buildUsers(done);
     });
+
 
     afterEach(function (done) {
 
