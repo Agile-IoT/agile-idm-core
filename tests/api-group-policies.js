@@ -211,7 +211,6 @@ IdmCore.prototype.getStorage = function () {
 
 var idmcore = new IdmCore(conf);
 
-
 //default data for the tests
 var token = "6328602477442473";
 var action = "create";
@@ -368,7 +367,6 @@ describe('Groups Api', function () {
       buildUsers(done);
     });
 
-
     afterEach(function (done) {
       cleanDb(done);
     });
@@ -400,11 +398,10 @@ describe('Groups Api', function () {
         }, function handlereject(error) {
           if (error.statusCode === 404) {
             done();
+          } else {
+            console.log("unexpected error" + error.statusCode);
+            throw error;
           }
-          else{
-           console.log("unexpected error"+error.statusCode);
-           throw error;
-        }
 
         });
 
@@ -483,7 +480,7 @@ describe('Groups Api', function () {
       idmcore.setMocks(null, null, null, dbconnection, null);
       idmcore.createGroup(admin_auth, group_name)
         .then(function (read) {
-          return idmcore.removeEntityFromGroup(admin_auth, group_name,admin_auth.id, entity_id, entity_type);
+          return idmcore.removeEntityFromGroup(admin_auth, group_name, admin_auth.id, entity_id, entity_type);
         }).then(function (res) {
 
         }, function handlereject(error) {
@@ -532,10 +529,10 @@ describe('Groups Api', function () {
             }).length === 0)
             done();
           else {
-            throw new Error("unexptecter result after deleting entity from group "+JSON.stringify(entityFinal));
+            throw new Error("unexptecter result after deleting entity from group " + JSON.stringify(entityFinal));
           }
         }, function handlereject(error) {
-          console.log("unexpecterd error: "+error);
+          console.log("unexpecterd error: " + error);
           throw error;
         });
     });
