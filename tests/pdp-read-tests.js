@@ -387,7 +387,6 @@ describe('Api (PEP Read test)', function () {
           return Promise.all(queries);
         })
         .then(function (results) {
-          console.log("res :" + JSON.stringify(results));
 
           if (results[0].length === 1 && admin_auth.id == results[0][0].id && //admin can only see his password
             results[1].length === 1 && user_info_auth.id == results[1][0].id && //oehter user can only see his password
