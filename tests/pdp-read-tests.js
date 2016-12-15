@@ -270,7 +270,6 @@ describe('Api (PEP Read test)', function () {
       buildUsers(done);
     });
 
-
     afterEach(function (done) {
       cleanDb(done);
     });
@@ -349,7 +348,6 @@ describe('Api (PEP Read test)', function () {
     beforeEach(function (done) {
       buildUsers(done);
     });
-
 
     afterEach(function (done) {
 

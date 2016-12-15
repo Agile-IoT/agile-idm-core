@@ -267,7 +267,6 @@ describe('Api (PEP Write Test)', function () {
       buildUsers(done);
     });
 
-
     afterEach(function (done) {
       cleanDb(done);
     });
@@ -317,7 +316,6 @@ describe('Api (PEP Write Test)', function () {
     beforeEach(function (done) {
       buildUsers(done);
     });
-
 
     afterEach(function (done) {
 
