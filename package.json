@@ -1,6 +1,6 @@
 {
   "name": "agile-idm-core",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "repository": "https://github.com/Agile-IoT/agile-idm-core",
   "description": "Generic Identity Management for the IoT (Core)",
   "main": "main.js",
