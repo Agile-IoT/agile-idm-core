@@ -3,6 +3,7 @@ var clone = require('clone');
 var assert = require('assert');
 var deepdif = require('deep-diff');
 var createError = require('http-errors');
+var updb = require('agile-upfront-leveldb');
 var fs = require('fs');
 var dbconnection = require('agile-idm-entity-storage').connectionPool;
 var db;
@@ -19,52 +20,122 @@ var conf = {
   "storage": {
     "dbName": dbName
   },
+  "upfront": {
+    pdp: {
+      ulocks: {
+        entityTypes: {
+          "/any": 0,
+          "/group": 1,
+          "/user": 2,
+          "/sensor": 3,
+          "/client": 4,
+          "/api": 5,
+          "/const": 6,
+          "/attr": 6,
+          "/prop": 6,
+          "/var": 6,
+        },
+        //fix this two eventually...
+        locks: "./node_modules/UPFROnt/example/online/Locks/",
+        actions: "./node_modules/UPFROnt/example/online/Actions"
+      }
+    },
+    pap: {
+      // this specifies host, port and path where
+      // this module should wait for requests
+      // if specified, the module runs as a PAP server
+      // if undefined, the module runs as a PAP client
+      // accessing another PAP server
+      /*server: {
+          "host": "localhost",
+          port: 1234,
+          path: "/pap/",
+          tls: false,
+          cluster: 1
+      },*/
+      // storage specifies where the policies
+      // are stored persistently:
+      // 1. if policies are stored remotely
+      // in another PAP, specify as type "remote"
+      // and indicate host, port and path
+      // 2. if policies are stored locally
+      // in a database, specify the db module
+      // ("mongodb", tbd) and the hostname and
+      // port
+      // thus, specifying type "remote" and specifying
+      // api yields an invalid configuration
+      storage: {
+        module_name: "agile-upfront-leveldb",
+        type: "external",
+        dbName: "./pap-database",
+        collection: "policies",
+        // specifies whether the module should check
+        // the cache to fetch a policy, of course,
+        // this may induce additional lookups but on
+        // average using the cache is recommended
+        cache: {
+          enabled: false,
+          TTL: 600,
+          pubsub: {
+            type: "redis",
+            channel: "policyUpdates"
+          }
+        }
+      }
+    }
+  },
   "policies": {
-    "dbName": "./policies.json",
     "create_entity_policy": [
       // actions of an actor are not restricted a priori
       {
         target: {
-          type: "any"
+          type: "/any"
         }
       }, {
         source: {
-          type: "any"
+          type: "/any"
         }
       }
     ],
-    "top_level_policy": [
-      // all properties can be read by everyone
-      {
-        target: {
-          type: "any"
+    "top_level_policy": {
+      flows: [
+        // all properties can be read by everyone
+        {
+          target: {
+            type: "/any"
+          }
+        },
+        // all properties can only be changed by the owner of the entity
+        {
+          source: {
+            type: "/user"
+          },
+          locks: [{
+            lock: "isOwner"
+          }]
+        },
+        {
+          source: {
+            type: "/user"
+          },
+          locks: [{
+            lock: "attrEq",
+            args: ["role", "admin"]
+          }]
         }
-      },
-      // all properties can only be changed by the owner of the entity
-      {
-        source: {
-          type: "user"
-        },
-        locks: [{
-          lock: "isOwner"
-        }]
-      }, {
-        source: {
-          type: "user"
-        },
-        locks: [{
-          lock: "attrEq",
-          args: ["role", "admin"]
-        }]
-      }
-    ],
+
+      ],
+      actions: [{
+        name: "delete"
+      }]
+    },
     "attribute_level_policies": {
       "user": {
         "password": [
           // the property can only be read by the user itself
           {
             target: {
-              type: "user"
+              type: "/user"
             },
             locks: [{
               lock: "isOwner"
@@ -73,7 +144,7 @@ var conf = {
           // the property can be set by the user itself and
           {
             source: {
-              type: "user"
+              type: "/user"
             },
             locks: [{
               lock: "isOwner"
@@ -82,7 +153,7 @@ var conf = {
           // by all users with role admin
           {
             source: {
-              type: "user"
+              type: "/user"
             },
             locks: [{
               lock: "attrEq",
@@ -94,13 +165,13 @@ var conf = {
           // can be read by everyone
           {
             target: {
-              type: "any"
+              type: "/any"
             }
           },
           // can only be changed by users with role admin
           {
             source: {
-              type: "user"
+              type: "/user"
             },
             locks: [{
               lock: "attrEq",
@@ -114,7 +185,7 @@ var conf = {
           // the property can only be read by the user itself
           {
             target: {
-              type: "user"
+              type: "/user"
             },
             locks: [{
               lock: "isOwner"
@@ -123,10 +194,20 @@ var conf = {
           // the property can be set by the user itself and
           {
             source: {
-              type: "user"
+              type: "/user"
             },
             locks: [{
               lock: "isOwner"
+            }]
+          },
+          // by all users with role admin
+          {
+            source: {
+              type: "/user"
+            },
+            locks: [{
+              lock: "attrEq",
+              args: ["role", "admin"]
             }]
           }
         ]
@@ -248,30 +329,27 @@ var admin_auth = clone(admin);
 admin_auth.id = "bob!@!agile-local";
 admin_auth.type = "/user";
 
-function cleanDb(c) {
-  //disconnect in any case.
-  function disconnect(done) {
+function cleanDb(done) {
     dbconnection("disconnect").then(function () {
       rmdir(dbName + "_entities", function (err, dirs, files) {
         rmdir(dbName + "_groups", function (err, dirs, files) {
           db = null;
-          done();
+          //updb.close().then(function () {
+            rmdir(conf.upfront.pap.storage.dbName + "_policies", function (err, dirs, files) {
+              done();
+            });
+          /*},function(error){
+            console.log("error!!!!!!!!!!! cleaning the policy db for the unit testing!" +error)
+            done();
+          })*/
+          //done();
+
         });
       });
     }, function () {
       throw Error("not able to close database");
     });
-  }
-  //if there is a policy file delete it
-  fs.exists(conf.policies.dbName, function (exists) {
-    if (exists) {
-      fs.unlink(conf.policies.dbName, function () {
-        disconnect(c);
-      });
-    } else {
-      disconnect(c);
-    }
-  });
+
 }
 
 function buildUsers(done) {
@@ -287,6 +365,7 @@ function buildUsers(done) {
     }).then(function () {
       done();
     }, function (err) {
+      console.log("something went wrong while attempting to create users!!!!")
       throw err;
     });
 }
@@ -319,7 +398,14 @@ describe('Entities Api (with policies)', function () {
 
     });
 
+
     it('should create an entity by id and return the same afterwards', function (done) {
+
+      console.log("starting second test!!!");
+      console.log("starting second test!!!");
+      console.log("starting second test!!!");
+      console.log("starting second test!!!");
+
       idmcore.setMocks(null, null, null, dbconnection, null);
       var entity = clone(entity_1);
       idmcore.createEntity(admin_auth, entity_id, entity_type, entity)
