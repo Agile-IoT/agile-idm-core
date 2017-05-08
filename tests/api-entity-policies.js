@@ -330,25 +330,25 @@ admin_auth.id = "bob!@!agile-local";
 admin_auth.type = "/user";
 
 function cleanDb(done) {
-    dbconnection("disconnect").then(function () {
-      rmdir(dbName + "_entities", function (err, dirs, files) {
-        rmdir(dbName + "_groups", function (err, dirs, files) {
-          db = null;
-          //updb.close().then(function () {
-            rmdir(conf.upfront.pap.storage.dbName + "_policies", function (err, dirs, files) {
-              done();
-            });
-          /*},function(error){
-            console.log("error!!!!!!!!!!! cleaning the policy db for the unit testing!" +error)
-            done();
-          })*/
-          //done();
-
+  dbconnection("disconnect").then(function () {
+    rmdir(dbName + "_entities", function (err, dirs, files) {
+      rmdir(dbName + "_groups", function (err, dirs, files) {
+        db = null;
+        //updb.close().then(function () {
+        rmdir(conf.upfront.pap.storage.dbName + "_policies", function (err, dirs, files) {
+          done();
         });
+        /*},function(error){
+          console.log("error!!!!!!!!!!! cleaning the policy db for the unit testing!" +error)
+          done();
+        })*/
+        //done();
+
       });
-    }, function () {
-      throw Error("not able to close database");
     });
+  }, function () {
+    throw Error("not able to close database");
+  });
 
 }
 
@@ -398,13 +398,7 @@ describe('Entities Api (with policies)', function () {
 
     });
 
-
     it('should create an entity by id and return the same afterwards', function (done) {
-
-      console.log("starting second test!!!");
-      console.log("starting second test!!!");
-      console.log("starting second test!!!");
-      console.log("starting second test!!!");
 
       idmcore.setMocks(null, null, null, dbconnection, null);
       var entity = clone(entity_1);
