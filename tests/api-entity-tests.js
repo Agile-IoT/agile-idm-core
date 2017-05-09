@@ -201,6 +201,7 @@ var conf = {
   "schema-validation": [{
     "id": "/sensor",
     "type": "object",
+    "additionalProperties": false,
     "properties": {
       "name": {
         "type": "string"
@@ -239,8 +240,8 @@ function cleanDb(c) {
         rmdir(dbName + "_groups", function (err, dirs, files) {
           db = null;
           rmdir(conf.upfront.pap.storage.dbName + "_policies", function (err, dirs, files) {
-              done();
-          });        
+            done();
+          });
 
         });
       });
@@ -356,6 +357,22 @@ describe('Entities Api', function () {
           throw err;
         });
     });
+
+    it('should reject with 400 when attempting create an entity with an undefined attribute type in strict mode', function (done) {
+      var idmcore = new IdmCore(conf);
+      idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
+      var entity = clone(entity_1);
+      entity.new_attribute_unallowde = 2;
+      idmcore.createEntity(user_info, entity_id, entity_type, entity)
+        .then(function (data) {
+          throw new Error("this attribute should not be allowed!");
+        }, function handlereject(r) {
+          if (r.statusCode === 400) {
+            done();
+          }
+        });
+    });
+
   });
 
   describe('#set attribute and read Entity()', function () {
@@ -374,6 +391,35 @@ describe('Entities Api', function () {
           }
         });
 
+    });
+
+    it('should reject with 400 an update when the new attribute is forbidden by the schema in strict mode', function (done) {
+      //strict mode can be removed by deleting the additionalProperties flag in the json schema
+      var idmcore = new IdmCore(conf);
+      var data2;
+      idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
+      var entity = clone(entity_1);
+      idmcore.createEntity(user_info, entity_id, entity_type, entity)
+        .then(function (data) {
+          if (entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
+            delete data.id;
+            delete data.type;
+            delete data.owner;
+            if (deepdif.diff(data, entity) == undefined) {
+              data2 = clone(data);
+              data2.name = "somenewname";
+              return idmcore.setEntityAttribute(user_info, entity_id, entity_type, "unallowed-attribute", "somenewname");
+            }
+          }
+        }).then(function (result) {
+          throw new Error("this attribute should not be allowed!");
+        }, function handlereject(r) {
+          if (r.statusCode === 400) {
+            done();
+          } else {
+            throw r;
+          }
+        });
     });
 
     it('should update an entity by id and return the proper values afterwards', function (done) {
@@ -412,7 +458,7 @@ describe('Entities Api', function () {
           }
         }, function handlereject(r) {
           throw r;
-        })
+        });
 
     });
   });

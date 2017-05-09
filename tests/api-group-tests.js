@@ -6,7 +6,6 @@ var createError = require('http-errors');
 var fs = require('fs');
 var dbconnection = require('agile-idm-entity-storage').connectionPool;
 
-
 //var EntityStorage = require('../../agile-idm-entity-storage/lib/level-storage');
 var db;
 //conf for the API (components such as storage and authentication for the API may be replaced during tests)

@@ -240,6 +240,7 @@ var conf = {
   }, {
     "id": "/user",
     "type": "object",
+    "additionalProperties": false,
     "properties": {
       "user_name": {
         "type": "string"
@@ -336,7 +337,6 @@ function cleanDb(done) {
         rmdir(conf.upfront.pap.storage.dbName + "_policies", function (err, dirs, files) {
           done();
         });
-
 
       });
     });
@@ -478,7 +478,6 @@ describe('Entities Api (with policies)', function () {
         }, function handlereject(r) {
           throw r;
         })
-
     });
   });
 
