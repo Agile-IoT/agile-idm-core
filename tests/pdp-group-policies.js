@@ -310,7 +310,6 @@ function cleanDb(c) {
       rmdir(dbName + "_entities", function (err, dirs, files) {
         rmdir(dbName + "_groups", function (err, dirs, files) {
           rmdir(conf.upfront.pap.storage.dbName + "_policies", function (err, dirs, files) {
-            console.log("errors after deleting policies: " + err + " dirs " + dirs + " files " + files);
             done();
           });
 
