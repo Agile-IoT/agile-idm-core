@@ -3,8 +3,6 @@ env:
   - DEBUG_IDM_CORE=1
 node_js:
   - "6"
-  - "5" 
   - "4"
   - "6"
   - "7"
-
