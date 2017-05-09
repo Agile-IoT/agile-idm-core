@@ -4,7 +4,6 @@ var assert = require('assert');
 var deepdif = require('deep-diff');
 var createError = require('http-errors');
 var fs = require('fs');
-var updb = require('agile-upfront-leveldb');
 var dbconnection = require('agile-idm-entity-storage').connectionPool;
 var db;
 //conf for the API (components such as storage and authentication for the API may be replaced during tests)
@@ -218,7 +217,7 @@ var conf = {
 var token = "6328602477442473";
 var user_info = {
   id: "6328602477442473!@!auth_type",
-  entity_type: "/User",
+  entity_type: "/user",
   user_name: "6328602477442473",
   auth_type: "auth_type",
   owner: "6328602477442473!@!auth_type"
@@ -239,11 +238,9 @@ function cleanDb(c) {
       rmdir(dbName + "_entities", function (err, dirs, files) {
         rmdir(dbName + "_groups", function (err, dirs, files) {
           db = null;
-          updb.close().then(function () {
-            rmdir(conf.upfront.pap.storage.dbName + "_policies", function (err, dirs, files) {
+          rmdir(conf.upfront.pap.storage.dbName + "_policies", function (err, dirs, files) {
               done();
-            });
-          })
+          });        
 
         });
       });
@@ -323,6 +320,7 @@ describe('Entities Api', function () {
           throw new Error('unexpec')
         }, function handlereject(error) {
           if (error.statusCode == 404) {
+            console.log("ok... not found...");
             done();
           }
         }).catch(function (err) {

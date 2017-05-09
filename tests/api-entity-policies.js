@@ -3,7 +3,6 @@ var clone = require('clone');
 var assert = require('assert');
 var deepdif = require('deep-diff');
 var createError = require('http-errors');
-var updb = require('agile-upfront-leveldb');
 var fs = require('fs');
 var dbconnection = require('agile-idm-entity-storage').connectionPool;
 var db;
@@ -334,15 +333,10 @@ function cleanDb(done) {
     rmdir(dbName + "_entities", function (err, dirs, files) {
       rmdir(dbName + "_groups", function (err, dirs, files) {
         db = null;
-        //updb.close().then(function () {
         rmdir(conf.upfront.pap.storage.dbName + "_policies", function (err, dirs, files) {
           done();
         });
-        /*},function(error){
-          console.log("error!!!!!!!!!!! cleaning the policy db for the unit testing!" +error)
-          done();
-        })*/
-        //done();
+
 
       });
     });

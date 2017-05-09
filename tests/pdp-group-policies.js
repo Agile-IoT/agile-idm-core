@@ -5,7 +5,7 @@ var deepdif = require('deep-diff');
 var createError = require('http-errors');
 var fs = require('fs');
 var dbconnection = require('agile-idm-entity-storage').connectionPool;
-var updb = require('agile-upfront-leveldb');
+
 /*
   This tests use (some policies). sometimes admin or another kind of user, although policies for the
   second kind of user are not really thoroughly checked.
