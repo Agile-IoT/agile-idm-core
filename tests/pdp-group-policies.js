@@ -310,21 +310,7 @@ function cleanDb(c) {
       rmdir(dbName + "_entities", function (err, dirs, files) {
         rmdir(dbName + "_groups", function (err, dirs, files) {
           rmdir(conf.upfront.pap.storage.dbName + "_policies", function (err, dirs, files) {
-            console.log("errors after deleting policies: "+err+" dirs "+dirs+" files "+files);
-
-            console.log("errors after deleting policies: "+err+" dirs "+dirs+" files "+files);
-
-            console.log("errors after deleting policies: "+err+" dirs "+dirs+" files "+files);
-
-            console.log("errors after deleting policies: "+err+" dirs "+dirs+" files "+files);
-
-            console.log("errors after deleting policies: "+err+" dirs "+dirs+" files "+files);
-
-            console.log("errors after deleting policies: "+err+" dirs "+dirs+" files "+files);
-
-            console.log("errors after deleting policies: "+err+" dirs "+dirs+" files "+files);
-
-            console.log("errors after deleting policies: "+err+" dirs "+dirs+" files "+files);
+            console.log("errors after deleting policies: " + err + " dirs " + dirs + " files " + files);
             done();
           });
 
@@ -395,13 +381,12 @@ describe('Groups Api with policies', function () {
       idmcore.setMocks(null, null, null, dbconnection, null);
       idmcore.readGroup(admin_auth, group_name, admin_auth.id)
         .then(function (read) {
-              throw new Error("it seems something was found? "+JSON.stringify(read));
+          throw new Error("it seems something was found? " + JSON.stringify(read));
         }, function handlereject(error) {
           if (error.statusCode === 404) {
             done();
-          }
-          else{
-            throw new Error("unexpected error "+error);
+          } else {
+            throw new Error("unexpected error " + error);
           }
         }).catch(function (err) {
           throw err;
