@@ -289,6 +289,12 @@ var PdpMockOk = {
       resolve();
     });
   },
+  canDeleteAttribute: function (userInfo, entities, attributeName, attributeValue) {
+    return new Promise(function (resolve, reject) {
+      //console.log('resolving with entities '+JSON.stringify(entities));
+      resolve();
+    });
+  },
   canUpdate: function (userInfo, entityInfo) {
     return new Promise(function (resolve, reject) {
       //console.log('resolving with entities '+JSON.stringify(entities));
@@ -461,6 +467,84 @@ describe('Entities Api', function () {
         });
 
     });
+
+    it('should remove remove an attribute that is allowed by the schema and return relevant information', function (done) {
+      var idmcore = new IdmCore(conf);
+      var data2;
+      idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
+      var sample = {
+        "name": "hello"
+      }
+      var entity = clone(sample);
+      entity.token = "123";
+
+      idmcore.createEntity(user_info, entity_id, entity_type, entity)
+        .then(function (data) {
+          if (entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
+            delete data.id;
+            delete data.type;
+            delete data.owner;
+            if (deepdif.diff(data, entity) == undefined) {
+              data2 = clone(data);
+              return idmcore.deleteEntityAttribute(user_info, entity_id, entity_type, "token");
+            } else {
+              throw new Error("unexpected result from createEntity")
+            }
+
+          }
+        }).then(function (result) {
+          if (entity_id == result.id && entity_type == result.type && result.owner == token + "!@!" + "auth_type") {
+            delete result.id;
+            delete result.type;
+            delete result.owner;
+
+            if (deepdif.diff(result, sample) === undefined)
+              return idmcore.readEntity(user_info, entity_id, entity_type);
+          }
+        })
+        .then(function (read) {
+          if (entity_id == read.id && entity_type == read.type && read.owner == token + "!@!" + "auth_type") {
+            delete read.id;
+            delete read.type;
+            delete read.owner;
+            if (deepdif.diff(read, sample) == undefined)
+              done()
+          }
+        }, function handlereject(r) {
+          throw r;
+        });
+
+    });
+
+    it('should reject with 400 when attempting to remove an attribute that is required by the schema', function (done) {
+      var idmcore = new IdmCore(conf);
+      var data2;
+      idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
+      var entity = clone(entity_1);
+      idmcore.createEntity(user_info, entity_id, entity_type, entity)
+        .then(function (data) {
+          if (entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") {
+            delete data.id;
+            delete data.type;
+            delete data.owner;
+            if (deepdif.diff(data, entity) == undefined) {
+              data2 = clone(data);
+              data2.name = "somenewname";
+              return idmcore.deleteEntityAttribute(user_info, entity_id, entity_type, "name");
+            }
+          }
+        }).then(function (result) {
+          throw new Error("this attribute should not have been removed!");
+        }, function handlereject(r) {
+          if (r.statusCode === 400) {
+            done();
+          } else {
+            throw r;
+          }
+
+        });
+
+    });
   });
 
   describe('#delete and readEntity()', function () {
@@ -482,7 +566,7 @@ describe('Entities Api', function () {
         });
     });
 
-    it('should delete an entity by id', function (done) {
+    it(' an entity by id', function (done) {
       var idmcore = new IdmCore(conf);
       idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
       var entity = clone(entity_1);
