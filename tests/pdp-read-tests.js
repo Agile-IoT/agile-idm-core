@@ -150,6 +150,63 @@ var conf = {
             }]
           }
         ],
+        "credentials": [
+          // the property can only be read by the user itself
+          {
+            target: {
+              type: "/any"
+            }
+          },
+          // the property can be set by the user itself and
+          {
+            source: {
+              type: "/user"
+            },
+            locks: [{
+              lock: "isOwner"
+            }]
+          },
+          // by all users with role admin
+          {
+            source: {
+              type: "/user"
+            },
+            locks: [{
+              lock: "attrEq",
+              args: ["role", "admin"]
+            }]
+          }
+        ],
+        "credentials.dropbox": [
+          // the property can only be read by the user itself
+          {
+            target: {
+              type: "/user"
+            },
+            locks: [{
+              lock: "isOwner"
+            }]
+          },
+          // the property can be set by the user itself and
+          {
+            source: {
+              type: "/user"
+            },
+            locks: [{
+              lock: "isOwner"
+            }]
+          },
+          // by all users with role admin
+          {
+            source: {
+              type: "/user"
+            },
+            locks: [{
+              lock: "attrEq",
+              args: ["role", "admin"]
+            }]
+          }
+        ],
         "role": [
           // can be read by everyone
           {
@@ -170,7 +227,26 @@ var conf = {
         ]
       },
       "sensor": {
-        "credentials": [
+        "credentials": {
+          flows: [
+            // all properties can be read by everyone
+            {
+              target: {
+                type: "/any"
+              }
+            },
+            // all properties can only be changed by the owner of the entity
+            {
+              source: {
+                type: "/user"
+              },
+              locks: [{
+                lock: "isOwner"
+              }]
+            }
+          ]
+        },
+        "credentials.dropbox": [
           // the property can only be read by the user itself
           {
             target: {
@@ -230,6 +306,7 @@ var conf = {
   }, {
     "id": "/user",
     "type": "object",
+    "additionalProperties": false,
     "properties": {
       "user_name": {
         "type": "string"
@@ -242,7 +319,17 @@ var conf = {
       },
       "role": {
         "type": "string"
+      },
+      "credentials": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "dropbox": {
+            "type": "string"
+          }
+        }
       }
+
     },
     "required": ["user_name", "auth_type"]
   }, {
@@ -370,6 +457,72 @@ describe('Api (PEP Read test)', function () {
         }, function handlereject(error) {
           throw error;
         });
+    });
+
+    it('should resolve with a declassified entity for different users for nested properties (credentials.dropbox not there)', function (done) {
+
+      var entity_id = "username!@!some-type";
+      var entity_type = "/user";
+      var owner = "username!@!some-type";
+      var entity = {
+        "user_name": "username",
+        "auth_type": "some-type",
+        "password": "value",
+        "credentials": {
+          "dropbox": "value",
+          "drive": "something"
+        }
+      }
+      idmcore.setMocks(null, null, null, dbconnection);
+      idmcore.createEntityAndSetOwner(admin_auth, entity_id, entity_type, entity, owner)
+        .then(function (res) {
+          console.log("res. after creating " + JSON.stringify(res));
+          return idmcore.readEntity(user_info_auth, res.id, res.type);
+        }).then(function (read) {
+          console.log("res. after reading " + JSON.stringify(read));
+          if (read.hasOwnProperty("credentials")) {
+            if (read.credentials.hasOwnProperty("dropbox")) {
+              console.log("oops dropbox is still there...")
+              throw new Error("entity not properly declassified!");
+            } else {
+              done();
+            }
+          } else {
+            throw new Error("removed something that wasn't supposed to be removed! credentials.drive");
+          }
+
+        }, function handlereject(error) {
+          throw error;
+        });
+    });
+
+    it('should resolve with the complete entity when the owner reads it including inner properties (credentials.dropbox)', function (done) {
+      var entity_id = "username!@!some-type";
+      var owner = "username!@!some-type";
+      var entity_type = "/user";
+      var entity = {
+        "user_name": "username",
+        "auth_type": "some-type",
+        "password": "value",
+        "credentials": {
+          "dropbox": "value",
+          "drive": "something"
+        }
+      }
+      idmcore.setMocks(null, null, null, dbconnection);
+      idmcore.createEntityAndSetOwner(admin_auth, entity_id, entity_type, entity, entity_id)
+        .then(function (res) {
+          return idmcore.readEntity(res, res.id, res.type);
+        }).then(function (data) {
+          if (!data.hasOwnProperty("password") || !data.hasOwnProperty("credentials") || data.credentials.dropbox !== entity.credentials.dropbox || data.credentials.drive !== entity.credentials.drive) {
+            throw new Error("entity wrongly declassified, an entity was removed when it should not have been removed!");
+          } else {
+            done();
+          }
+        }, function handlereject(error) {
+          throw error;
+        });
+
     });
 
     it('should resolve with the complete entity when the owner reads it', function (done) {
