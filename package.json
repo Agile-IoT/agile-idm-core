@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "UPFROnt": "git+https://github.com/nopbyte/UPFROnt#frozen-in-time",
-    "agile-idm-entity-storage": "git+https://github.com/Agile-IoT/agile-idm-entity-storage#v1.0.1",
+    "agile-idm-entity-storage": "git+https://github.com/Agile-IoT/agile-idm-entity-storage#v1.0.2",
     "agile-upfront-leveldb": "git+https://github.com/Agile-IoT/agile-upfront-leveldb.git",
     "clone": "1.0.2",
     "http-errors": "^1.5.0",
