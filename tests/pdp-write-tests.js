@@ -460,4 +460,39 @@ describe('Api (PEP Write Test)', function () {
 
   });
 
+  describe('#deleteEntityAttribute()', function () {
+
+    beforeEach(function (done) {
+      buildUsers(done);
+    });
+
+    afterEach(function (done) {
+
+      cleanDb(done);
+    });
+
+    it('should resolve  when attempting to update  an entity attribute with the proper role', function (done) {
+      var entity_id = "1";
+      var entity_type = "/user";
+      var owner = "username!@!some-type";
+      var entity = {
+        "user_name": "username",
+        "auth_type": "some-type",
+        "password": "value"
+      }
+      idmcore.setMocks(null, null, null, dbconnection);
+      idmcore.createEntityAndSetOwner(admin_auth, entity_id, entity_type, entity, owner)
+        .then(function (res) {
+          return idmcore.deleteEntityAttribute(admin_auth, entity_id, entity_type, "password");
+        }).then(function (res) {
+          return idmcore.readEntity(admin_auth, res.id, res.type);
+        }).then(function (res) {
+          if (!res.hasOwnProperty("password"))
+            done();
+        }, function handlereject(error) {
+          throw error;
+        });
+    });
+  });
+
 });
