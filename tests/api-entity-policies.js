@@ -642,4 +642,49 @@ describe('Entities Api (with policies)', function () {
 
     });
   });
+
+    describe('#set and read Policies', function () {
+
+        beforeEach(function (done) {
+            buildUsers(done);
+        });
+
+        afterEach(function (done) {
+            cleanDb(done);
+        });
+
+
+        it('should return the list of policies of the entity', function (done) {
+            idmcore.setMocks(null, null, null, dbconnection, null);
+            var entity = clone(entity_1);
+            idmcore.createEntity(admin_auth, entity_id, entity_type, entity).then(function(data) {
+                idmcore.getPap().getEntityPolicies(entity_id, entity_type)
+                    .then(function(entity) {
+                        console.log();
+
+                        var different = false;
+                        for(var attribute in entity.properties) {
+                            if(conf.policies.attribute_level_policies.sensor.hasOwnProperty(attribute)) {
+                                different = deepdif.diff(conf.policies.attribute_level_policies.sensor[attribute],
+                                        entity.properties[attribute].self) !== undefined;
+                                if(different) {
+                                    break;
+                                }
+                            }
+                        }
+                        if(!different) {
+                            different = deepdif.diff(conf.policies.top_level_policy, entity.self) !== undefined; //also check the top_level_policy
+                        }
+                        return different;
+
+                }).then(function (different) {
+                    if (!different) {
+                        done();
+                    }
+            }, function handlereject(error) {
+                    throw error;
+                });
+        });
+    });
+});
 });
