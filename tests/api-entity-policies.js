@@ -274,6 +274,39 @@ var conf = {
   }]
 };
 
+var additionalPolicy = {
+    "files": [
+        // the property can only be read by the user itself
+        {
+            target: {
+                type: "/user"
+            },
+            locks: [{
+                lock: "isOwner"
+            }]
+        },
+        // the property can be set by the user itself and
+        {
+            source: {
+                type: "/user"
+            },
+            locks: [{
+                lock: "isOwner"
+            }]
+        },
+        // by all users with role admin
+        {
+            source: {
+                type: "/user"
+            },
+            locks: [{
+                lock: "attrEq",
+                args: ["role", "admin"]
+            }]
+        }
+    ]
+};
+
 //override this object to get the pap for creating the fist user.
 IdmCore.prototype.getPap = function () {
   return this.pap;
@@ -658,23 +691,23 @@ describe('Entities Api (with policies)', function () {
             idmcore.setMocks(null, null, null, dbconnection, null);
             var entity = clone(entity_1);
             idmcore.createEntity(admin_auth, entity_id, entity_type, entity).then(function(data) {
-                idmcore.getPap().getEntityPolicies(entity_id, entity_type)
-                    .then(function(entity) {
-                        console.log();
+                idmcore.getEntityPolicies(entity_id, entity_type)
+                    .then(function(policices) {
+                    //    console.log(policices);
 
                         var different = false;
-                        for(var attribute in entity.properties) {
+                        for(var attribute in policices) {
                             if(conf.policies.attribute_level_policies.sensor.hasOwnProperty(attribute)) {
                                 different = deepdif.diff(conf.policies.attribute_level_policies.sensor[attribute],
-                                        entity.properties[attribute].self) !== undefined;
+                                        policices[attribute].self) !== undefined;
                                 if(different) {
                                     break;
                                 }
                             }
                         }
-                        if(!different) {
-                            different = deepdif.diff(conf.policies.top_level_policy, entity.self) !== undefined; //also check the top_level_policy
-                        }
+                      /*  if(!different) { //TODO Do we need the top_level_policices?
+                            different = deepdif.diff(conf.policies.top_level_policy, policices.self) !== undefined; //also check the top_level_policy
+                        }*/
                         return different;
 
                 }).then(function (different) {
@@ -685,6 +718,24 @@ describe('Entities Api (with policies)', function () {
                     throw error;
                 });
         });
+
+    });
+
+        it('set policy for entity', function (done) {
+            idmcore.setMocks(null, null, null, dbconnection, null);
+            var entity = clone(entity_1);
+            idmcore.createEntity(admin_auth, entity_id, entity_type, entity).then(function(data) {
+              return idmcore.setEntityPolicy(entity_id, entity_type, "files", additionalPolicy["files"]);
+            }).then(function(entity) {
+                return entity.properties.hasOwnProperty("files") && deepdif(entity.properties["files"], additionalPolicy["files"]) === undefined;
+            }).then(function (different) {
+                if (!different) {
+                    done();
+                }
+            }, function handlereject(error) {
+                throw error;
+            });
+        });
     });
 });
-});
+
