@@ -726,9 +726,9 @@ describe('Entities Api (with policies)', function () {
       idmcore.createEntity(admin_auth, entity_id, entity_type, entity).then(function (data) {
         return idmcore.setEntityPolicy(entity_id, entity_type, "files", additionalPolicy["files"]);
       }).then(function (entity) {
-        return entity.properties.hasOwnProperty("files") && deepdif(entity.properties["files"], additionalPolicy["files"]) === undefined;
-      }).then(function (different) {
-        if (!different) {
+        return entity.properties.hasOwnProperty("files") && deepdif(entity.properties["files"].self, additionalPolicy["files"]) === undefined;
+      }).then(function (equal) {
+        if (equal) {
           done();
         }
       }, function handlereject(error) {
