@@ -689,24 +689,28 @@ describe('Entities Api (with policies)', function () {
     it('should return the list of policies of the entity', function (done) {
       idmcore.setMocks(null, null, null, dbconnection, null);
       var entity = clone(entity_1);
-      idmcore.createEntity(admin_auth, entity_id, entity_type, entity).then(function (data) {
-        idmcore.getEntityPolicies(entity_id, entity_type)
-          .then(function (policices) {
-            //    console.log(policices);
 
+      idmcore.createEntity(admin_auth, entity_id, entity_type, entity).then(function (data) {
+
+        idmcore.getEntityPolicies(entity_id, entity_type)
+          .then(function (policies) {
+            entity_type = entity_type.replace("/", "");
+            //Check deeper level of policies, check agile-idm-web-ui as example /rpi-conf
             var different = false;
-            for (var attribute in policices) {
-              if (conf.policies.attribute_level_policies.sensor.hasOwnProperty(attribute)) {
-                different = deepdif.diff(conf.policies.attribute_level_policies.sensor[attribute],
-                  policices[attribute].self) !== undefined;
+            for (var attribute in policies) {
+
+              if (conf.policies.attribute_level_policies[entity_type].hasOwnProperty(attribute)) {
+
+                different = deepdif.diff(conf.policies.attribute_level_policies[entity_type][attribute],
+                        policies[attribute].self) !== undefined;
                 if (different) {
                   break;
                 }
               }
             }
-            /*  if(!different) { //TODO Do we need the top_level_policices?
-                  different = deepdif.diff(conf.policies.top_level_policy, policices.self) !== undefined; //also check the top_level_policy
-              }*/
+             if(!different) {
+                  different = deepdif.diff(conf.policies.top_level_policy, policies.self) !== undefined; //also check the top_level_policy
+              }
             return different;
 
           }).then(function (different) {
@@ -725,7 +729,7 @@ describe('Entities Api (with policies)', function () {
       var entity = clone(entity_1);
       idmcore.createEntity(admin_auth, entity_id, entity_type, entity).then(function (data) {
         return idmcore.setEntityPolicy(entity_id, entity_type, "files", additionalPolicy["files"]);
-      }).then(function (entity) {
+      }).then(function (entity) { //TODO query api, instead of accessing the returned data
         return entity.properties.hasOwnProperty("files") && deepdif(entity.properties["files"].self, additionalPolicy["files"]) === undefined;
       }).then(function (equal) {
         if (equal) {
