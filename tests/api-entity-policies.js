@@ -702,15 +702,15 @@ describe('Entities Api (with policies)', function () {
               if (conf.policies.attribute_level_policies[entity_type].hasOwnProperty(attribute)) {
 
                 different = deepdif.diff(conf.policies.attribute_level_policies[entity_type][attribute],
-                        policies[attribute].self) !== undefined;
+                  policies[attribute].self) !== undefined;
                 if (different) {
                   break;
                 }
               }
             }
-             if(!different) {
-                  different = deepdif.diff(conf.policies.top_level_policy, policies.self) !== undefined; //also check the top_level_policy
-              }
+            if (!different) {
+              different = deepdif.diff(conf.policies.top_level_policy, policies.self) !== undefined; //also check the top_level_policy
+            }
             return different;
 
           }).then(function (different) {
@@ -730,28 +730,30 @@ describe('Entities Api (with policies)', function () {
       idmcore.createEntity(admin_auth, entity_id, entity_type, entity).then(function (data) {
         return idmcore.setEntityPolicy(entity_id, entity_type, "files", additionalPolicy["files"]);
       }).then(function (entity) {
-          return idmcore.getPap().getAttributePolicy(entity_id, entity_type, "files");
-      }).then(function(filesPolicy) {
-          for(var i in filesPolicy.flows) {
-              for(var entry in filesPolicy.flows[i]) {
-                  if(filesPolicy.flows[i].hasOwnProperty(entry)) {
-                      //Remove the Entity class from the target and sources
-                      if(filesPolicy.flows[i][entry].hasOwnProperty("type")) {
-                          var type = filesPolicy.flows[i][entry].type;
-                          filesPolicy.flows[i][entry] = {type: type};
-                      }
-                      //Remove "not" attribute
-                      if(entry === "locks") {
-                          for(var j in filesPolicy.flows[i][entry]) {
-                              delete filesPolicy.flows[i][entry][j].not;
-                          }
-                      }
-                  }
+        return idmcore.getPap().getAttributePolicy(entity_id, entity_type, "files");
+      }).then(function (filesPolicy) {
+        for (var i in filesPolicy.flows) {
+          for (var entry in filesPolicy.flows[i]) {
+            if (filesPolicy.flows[i].hasOwnProperty(entry)) {
+              //Remove the Entity class from the target and sources
+              if (filesPolicy.flows[i][entry].hasOwnProperty("type")) {
+                var type = filesPolicy.flows[i][entry].type;
+                filesPolicy.flows[i][entry] = {
+                  type: type
+                };
               }
+              //Remove "not" attribute
+              if (entry === "locks") {
+                for (var j in filesPolicy.flows[i][entry]) {
+                  delete filesPolicy.flows[i][entry][j].not;
+                }
+              }
+            }
           }
-          return deepdif(filesPolicy.flows, additionalPolicy["files"]) === undefined;
-      }).then(function(equal) {
-        if(equal) {
+        }
+        return deepdif(filesPolicy.flows, additionalPolicy["files"]) === undefined;
+      }).then(function (equal) {
+        if (equal) {
           done();
         }
       });
