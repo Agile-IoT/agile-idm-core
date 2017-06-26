@@ -690,9 +690,9 @@ describe('Entities Api (with policies)', function () {
       idmcore.setMocks(null, null, null, dbconnection, null);
       var entity = clone(entity_1);
 
-      idmcore.createEntity(admin_auth, entity_id, entity_type, entity).then(function (data) {
+      idmcore.createEntity(user_info_auth, entity_id, entity_type, entity).then(function (data) {
 
-        idmcore.getEntityPolicies(entity_id, entity_type)
+        idmcore.getEntityPolicies(user_info_auth, entity_id, entity_type)
           .then(function (policies) {
             entity_type = entity_type.replace("/", "");
             //Check deeper level of policies, check agile-idm-web-ui as example /rpi-conf
@@ -727,8 +727,8 @@ describe('Entities Api (with policies)', function () {
     it('set policy for entity', function (done) {
       idmcore.setMocks(null, null, null, dbconnection, null);
       var entity = clone(entity_1);
-      idmcore.createEntity(admin_auth, entity_id, entity_type, entity).then(function (data) {
-        return idmcore.setEntityPolicy(entity_id, entity_type, "files", additionalPolicy["files"]);
+      idmcore.createEntity(user_info_auth, entity_id, entity_type, entity).then(function (data) {
+        return idmcore.setEntityPolicy(user_info_auth, entity_id, entity_type, user_info_auth.owner, "files", additionalPolicy["files"]);
       }).then(function (entity) {
         return idmcore.getPap().getAttributePolicy(entity_id, entity_type, "files");
       }).then(function (filesPolicy) {
