@@ -728,7 +728,7 @@ describe('Entities Api (with policies)', function () {
       idmcore.setMocks(null, null, null, dbconnection, null);
       var entity = clone(entity_1);
       idmcore.createEntity(user_info_auth, entity_id, entity_type, entity).then(function (data) {
-        return idmcore.setEntityPolicy(user_info_auth, entity_id, entity_type, user_info_auth.owner, "files", additionalPolicy["files"]);
+        return idmcore.setEntityPolicy(user_info_auth, entity_id, entity_type, "files", additionalPolicy["files"]);
       }).then(function (entity) {
         return idmcore.getPap().getAttributePolicy(entity_id, entity_type, "files");
       }).then(function (filesPolicy) {
