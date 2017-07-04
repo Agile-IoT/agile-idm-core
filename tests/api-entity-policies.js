@@ -770,7 +770,8 @@ describe('Entities Api (with policies)', function () {
           }).then(function (entity) {
               return idmcore.getEntityPolicies(user_info_auth, entity_id, entity_type);
           }).then(function (entity) {
-              return entity.properties["files"].self === null; //policy is not deleted completed, but policy.self is set to null instead
+              return entity.properties["files"].self === null;
+              //TODO policy is not deleted completed, but policy.self is set to null instead. Check later if something changed on that implementation
           }).then(function (deleted) {
              if(deleted) {
                done();
