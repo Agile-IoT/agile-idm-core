@@ -694,7 +694,7 @@ describe('Entities Api (with policies)', function () {
 
         idmcore.getEntityPolicies(user_info_auth, entity_id, entity_type)
           .then(function (policies) { // policies: properties/entities/self = top_level_policies
-                                      //
+            //
             entity_type = entity_type.replace("/", "");
             //Check deeper level of policies, check agile-idm-web-ui as example /rpi-conf
             var different = false;
@@ -760,25 +760,25 @@ describe('Entities Api (with policies)', function () {
       });
     });
 
-      it('delete policy for entity', function (done) {
-          idmcore.setMocks(null, null, null, dbconnection, null);
-          var entity = clone(entity_1);
-          idmcore.createEntity(user_info_auth, entity_id, entity_type, entity).then(function (data) {
-              return idmcore.setEntityPolicy(user_info_auth, entity_id, entity_type, "files", additionalPolicy["files"]);
-          }).then(function (entity) {
-              return idmcore.deleteEntityPolicy(user_info_auth, entity_id, entity_type, "files");
-          }).then(function (entity) {
-              return idmcore.getEntityPolicies(user_info_auth, entity_id, entity_type);
-          }).then(function (entity) {
-              return entity.properties["files"].self === null;
-              //TODO policy is not deleted completed, but policy.self is set to null instead. Check later if something changed on that implementation
-          }).then(function (deleted) {
-             if(deleted) {
-               done();
-             }
-          }, function handlereject(error) {
-              throw error;
-          });
+    it('delete policy for entity', function (done) {
+      idmcore.setMocks(null, null, null, dbconnection, null);
+      var entity = clone(entity_1);
+      idmcore.createEntity(user_info_auth, entity_id, entity_type, entity).then(function (data) {
+        return idmcore.setEntityPolicy(user_info_auth, entity_id, entity_type, "files", additionalPolicy["files"]);
+      }).then(function (entity) {
+        return idmcore.deleteEntityPolicy(user_info_auth, entity_id, entity_type, "files");
+      }).then(function (entity) {
+        return idmcore.getEntityPolicies(user_info_auth, entity_id, entity_type);
+      }).then(function (entity) {
+        return entity.properties["files"].self === null;
+        //TODO policy is not deleted completed, but policy.self is set to null instead. Check later if something changed on that implementation
+      }).then(function (deleted) {
+        if (deleted) {
+          done();
+        }
+      }, function handlereject(error) {
+        throw error;
       });
+    });
   });
 });
