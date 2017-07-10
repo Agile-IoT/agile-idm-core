@@ -382,7 +382,7 @@ function cleanDb(c) {
 
 function buildUsers(done) {
 
-  var arr = [idmcore.getPap().setEntityPolicies(admin_auth.id, admin_auth.type),
+  var arr = [idmcore.getPap().setDefaultEntityPolicies(admin_auth.id, admin_auth.type),
     idmcore.getStorage().createEntity(admin_auth.id, admin_auth.type, admin_auth.id, admin_auth)
   ];
   Promise.all(arr)

@@ -274,6 +274,39 @@ var conf = {
   }]
 };
 
+var additionalPolicy = {
+  "files": [
+    // the property can only be read by the user itself
+    {
+      target: {
+        type: "/user"
+      },
+      locks: [{
+        lock: "isOwner"
+      }]
+    },
+    // the property can be set by the user itself and
+    {
+      source: {
+        type: "/user"
+      },
+      locks: [{
+        lock: "isOwner"
+      }]
+    },
+    // by all users with role admin
+    {
+      source: {
+        type: "/user"
+      },
+      locks: [{
+        lock: "attrEq",
+        args: ["role", "admin"]
+      }]
+    }
+  ]
+};
+
 //override this object to get the pap for creating the fist user.
 IdmCore.prototype.getPap = function () {
   return this.pap;
@@ -348,7 +381,7 @@ function cleanDb(done) {
 
 function buildUsers(done) {
 
-  var arr = [idmcore.getPap().setEntityPolicies(admin_auth.id, admin_auth.type),
+  var arr = [idmcore.getPap().setDefaultEntityPolicies(admin_auth.id, admin_auth.type),
     idmcore.getStorage().createEntity(admin_auth.id, admin_auth.type, admin_auth.id, admin_auth)
   ];
   Promise.all(arr)
@@ -640,6 +673,112 @@ describe('Entities Api (with policies)', function () {
           throw err;
         });
 
+    });
+  });
+
+  describe('#set and read Policies', function () {
+
+    beforeEach(function (done) {
+      buildUsers(done);
+    });
+
+    afterEach(function (done) {
+      cleanDb(done);
+    });
+
+    it('should return the list of policies of the entity', function (done) {
+      idmcore.setMocks(null, null, null, dbconnection, null);
+      var entity = clone(entity_1);
+
+      idmcore.createEntity(user_info_auth, entity_id, entity_type, entity).then(function (data) {
+
+        idmcore.getEntityPolicies(user_info_auth, entity_id, entity_type)
+          .then(function (policies) { // policies: properties/entities/self = top_level_policies
+            //
+            entity_type = entity_type.replace("/", "");
+            //Check deeper level of policies, check agile-idm-web-ui as example /rpi-conf
+            var different = false;
+            for (var attribute in policies) {
+
+              if (conf.policies.attribute_level_policies[entity_type].hasOwnProperty(attribute)) {
+
+                different = deepdif.diff(conf.policies.attribute_level_policies[entity_type][attribute],
+                  policies[attribute].self) !== undefined;
+                if (different) {
+                  break;
+                }
+              }
+            }
+            if (!different) {
+              different = deepdif.diff(conf.policies.top_level_policy, policies.self) !== undefined; //also check the top_level_policy
+            }
+            return different;
+
+          }).then(function (different) {
+            if (!different) {
+              done();
+            }
+          }, function handlereject(error) {
+            throw error;
+          });
+      });
+
+    });
+
+    it('set policy for entity', function (done) {
+      idmcore.setMocks(null, null, null, dbconnection, null);
+      var entity = clone(entity_1);
+      idmcore.createEntity(user_info_auth, entity_id, entity_type, entity).then(function (data) {
+        return idmcore.setEntityPolicy(user_info_auth, entity_id, entity_type, "files", additionalPolicy["files"]);
+      }).then(function (entity) {
+        return idmcore.getPap().getAttributePolicy(entity_id, entity_type, "files");
+      }).then(function (filesPolicy) {
+        for (var i in filesPolicy.flows) {
+          for (var entry in filesPolicy.flows[i]) {
+            if (filesPolicy.flows[i].hasOwnProperty(entry)) {
+              //Remove the Entity class from the target and sources
+              if (filesPolicy.flows[i][entry].hasOwnProperty("type")) {
+                var type = filesPolicy.flows[i][entry].type;
+                filesPolicy.flows[i][entry] = {
+                  type: type
+                };
+              }
+              //Remove "not" attribute
+              if (entry === "locks") {
+                for (var j in filesPolicy.flows[i][entry]) {
+                  delete filesPolicy.flows[i][entry][j].not;
+                }
+              }
+            }
+          }
+        }
+        return deepdif(filesPolicy.flows, additionalPolicy["files"]) === undefined;
+      }).then(function (equal) {
+        if (equal) {
+          done();
+        }
+      });
+    });
+
+    it('delete policy for entity', function (done) {
+      idmcore.setMocks(null, null, null, dbconnection, null);
+      var entity = clone(entity_1);
+      idmcore.createEntity(user_info_auth, entity_id, entity_type, entity).then(function (data) {
+        return idmcore.setEntityPolicy(user_info_auth, entity_id, entity_type, "files", additionalPolicy["files"]);
+      }).then(function (entity) {
+        return idmcore.deleteEntityPolicy(user_info_auth, entity_id, entity_type, "files");
+      }).then(function (entity) {
+        return idmcore.getEntityPolicies(user_info_auth, entity_id, entity_type);
+      }).then(function (entity) {
+        return entity.properties["files"].self === null;
+        //TODO policy is not deleted completed, but policy.self is set to null instead. Check later if something changed on that implementation
+      }).then(function (deleted) {
+        if (deleted) {
+          done();
+        }
+      }, function handlereject(error) {
+        throw error;
+      });
     });
   });
 });
