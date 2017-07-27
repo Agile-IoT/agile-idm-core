@@ -8,7 +8,7 @@
     "test": "tests"
   },
   "dependencies": {
-    "UPFROnt": "git+https://github.com/nopbyte/UPFROnt#frozen-in-time",
+    "UPFROnt": "git+https://github.com/SEDARI/UPFROnt#1189c3dab38e8bdff6829ea58e44b9f66216a792",
     "agile-idm-entity-storage": "git+https://github.com/Agile-IoT/agile-idm-entity-storage#v1.0.2",
     "agile-upfront-leveldb": "git+https://github.com/Agile-IoT/agile-upfront-leveldb.git",
     "clone": "1.0.2",
