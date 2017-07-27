@@ -14,24 +14,31 @@ var conf = {
     "dbName": dbName
   },
   "upfront": {
+    ulocks: {
+      entityTypes: {
+        "/any": 0,
+        "/group": 1,
+        "/user": 2,
+        "/sensor": 3,
+        "/client": 4,
+        "/api": 5,
+        "/const": 6,
+        "/attr": 6,
+        "/prop": 6,
+        "/var": 6,
+      },
+      opTypes: {
+        write: 0,
+        read: 1
+      },
+      //fix this two eventually...
+      locks: "./node_modules/UPFROnt//ulocks/Locks",
+      actions: "./node_modules/UPFROnt/ulocks/Actions"
+      /*locks: "./node_modules/UPFROnt/example/online/Locks/",
+      actions: "./node_modules/UPFROnt/example/online/Actions"*/
+    },
     pdp: {
-      ulocks: {
-        entityTypes: {
-          "/any": 0,
-          "/group": 1,
-          "/user": 2,
-          "/sensor": 3,
-          "/client": 4,
-          "/api": 5,
-          "/const": 6,
-          "/attr": 6,
-          "/prop": 6,
-          "/var": 6,
-        },
-        //fix this two eventually...
-        locks: "./node_modules/UPFROnt/example/online/Locks/",
-        actions: "./node_modules/UPFROnt/example/online/Actions"
-      }
+
     },
     pap: {
       // this specifies host, port and path where
@@ -61,19 +68,7 @@ var conf = {
         module_name: "agile-upfront-leveldb",
         type: "external",
         dbName: "./pap-database",
-        collection: "policies",
-        // specifies whether the module should check
-        // the cache to fetch a policy, of course,
-        // this may induce additional lookups but on
-        // average using the cache is recommended
-        cache: {
-          enabled: false,
-          TTL: 600,
-          pubsub: {
-            type: "redis",
-            channel: "policyUpdates"
-          }
-        }
+        collection: "policies"
       }
     }
   },
@@ -81,64 +76,76 @@ var conf = {
     "create_entity_policy": [
       // actions of an actor are not restricted a priori
       {
-        target: {
-          type: "/any"
-        }
-      }, {
-        source: {
-          type: "/any"
-        }
+        op: "write"
+      },
+      {
+        op: "read"
       }
     ],
     "top_level_policy": {
       flows: [
         // all properties can be read by everyone
         {
-          target: {
-            type: "/any"
-          }
+          op: "read"
         },
         // all properties can only be changed by the owner of the entity
         {
-          source: {
-            type: "/user"
-          },
+          op: "write",
           locks: [{
+            lock: "hasType",
+            args: ["/user"]
+          }, {
             lock: "isOwner"
+          }]
+        },
+        {
+          op: "write",
+          locks: [{
+            lock: "hasType",
+            args: ["/user"]
+          }, {
+            lock: "attrEq",
+            args: ["role", "admin"]
           }]
         }
       ],
-      actions: [{
-        name: "delete"
-      }]
+      //specify what should happen if the policy does not comply
+      actions: {
+        "read": [{
+          action: "delete"
+        }]
+      }
     },
     "attribute_level_policies": {
       "user": {
         "password": [
           // the property can only be read by the user itself
           {
-            target: {
-              type: "/user"
-            },
+            op: "read",
             locks: [{
+              lock: "hasType",
+              args: ["/user"]
+            }, {
               lock: "isOwner"
             }]
-          },
+          }
           // the property can be set by the user itself and
-          {
-            source: {
-              type: "/user"
-            },
+          , {
+            op: "write",
             locks: [{
+              lock: "hasType",
+              args: ["/user"]
+            }, {
               lock: "isOwner"
             }]
           },
           // by all users with role admin
           {
-            source: {
-              type: "/user"
-            },
+            op: "write",
             locks: [{
+              lock: "hasType",
+              args: ["/user"]
+            }, {
               lock: "attrEq",
               args: ["role", "admin"]
             }]
@@ -147,16 +154,15 @@ var conf = {
         "role": [
           // can be read by everyone
           {
-            target: {
-              type: "/any"
-            }
+            op: "read"
           },
           // can only be changed by users with role admin
           {
-            source: {
-              type: "/user"
-            },
+            op: "write",
             locks: [{
+              lock: "hasType",
+              args: ["/user"]
+            }, {
               lock: "attrEq",
               args: ["role", "admin"]
             }]
@@ -167,28 +173,31 @@ var conf = {
         "credentials": [
           // the property can only be read by the user itself
           {
-            target: {
-              type: "/user"
-            },
+            op: "read",
             locks: [{
+              lock: "hasType",
+              args: ["/user"]
+            }, {
               lock: "isOwner"
             }]
           },
           // the property can be set by the user itself and
           {
-            source: {
-              type: "/user"
-            },
+            op: "write",
             locks: [{
+              lock: "hasType",
+              args: ["/user"]
+            }, {
               lock: "isOwner"
             }]
           },
           // by all users with role admin
           {
-            source: {
-              type: "/user"
-            },
+            op: "write",
             locks: [{
+              lock: "hasType",
+              args: ["/user"]
+            }, {
               lock: "attrEq",
               args: ["role", "admin"]
             }]
@@ -199,18 +208,18 @@ var conf = {
     }
   },
   "schema-validation": [{
-    "id": "/sensor",
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-      "name": {
-        "type": "string"
+      "id": "/sensor",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "token": {
+          "type": "string"
+        }
       },
-      "token": {
-        "type": "string"
-      }
-    },
-    "required": ["name"]
+      "required": ["name"]
   }]
 };
 

@@ -5,6 +5,7 @@ var deepdif = require('deep-diff');
 var createError = require('http-errors');
 var fs = require('fs');
 var dbconnection = require('agile-idm-entity-storage').connectionPool;
+var ulocks = require('ULocks');
 var db;
 
 /*
@@ -20,24 +21,31 @@ var conf = {
     "dbName": dbName
   },
   "upfront": {
+    ulocks: {
+      entityTypes: {
+        "/any": 0,
+        "/group": 1,
+        "/user": 2,
+        "/sensor": 3,
+        "/client": 4,
+        "/api": 5,
+        "/const": 6,
+        "/attr": 6,
+        "/prop": 6,
+        "/var": 6,
+      },
+      opTypes: {
+        write: 0,
+        read: 1
+      },
+      //fix this two eventually...
+      locks: "./node_modules/UPFROnt//ulocks/Locks",
+      actions: "./node_modules/UPFROnt/ulocks/Actions"
+      /*locks: "./node_modules/UPFROnt/example/online/Locks/",
+      actions: "./node_modules/UPFROnt/example/online/Actions"*/
+    },
     pdp: {
-      ulocks: {
-        entityTypes: {
-          "/any": 0,
-          "/group": 1,
-          "/user": 2,
-          "/sensor": 3,
-          "/client": 4,
-          "/api": 5,
-          "/const": 6,
-          "/attr": 6,
-          "/prop": 6,
-          "/var": 6,
-        },
-        //fix this two eventually...
-        locks: "./node_modules/UPFROnt/example/online/Locks/",
-        actions: "./node_modules/UPFROnt/example/online/Actions"
-      }
+
     },
     pap: {
       // this specifies host, port and path where
@@ -67,19 +75,7 @@ var conf = {
         module_name: "agile-upfront-leveldb",
         type: "external",
         dbName: "./pap-database",
-        collection: "policies",
-        // specifies whether the module should check
-        // the cache to fetch a policy, of course,
-        // this may induce additional lookups but on
-        // average using the cache is recommended
-        cache: {
-          enabled: false,
-          TTL: 600,
-          pubsub: {
-            type: "redis",
-            channel: "policyUpdates"
-          }
-        }
+        collection: "policies"
       }
     }
   },
@@ -87,74 +83,76 @@ var conf = {
     "create_entity_policy": [
       // actions of an actor are not restricted a priori
       {
-        target: {
-          type: "/any"
-        }
-      }, {
-        source: {
-          type: "/any"
-        }
+        op: "write"
+      },
+      {
+        op: "read"
       }
     ],
     "top_level_policy": {
       flows: [
         // all properties can be read by everyone
         {
-          target: {
-            type: "/any"
-          }
+          op: "read"
         },
         // all properties can only be changed by the owner of the entity
         {
-          source: {
-            type: "/user"
-          },
+          op: "write",
           locks: [{
+            lock: "hasType",
+            args: ["/user"]
+          }, {
             lock: "isOwner"
           }]
         },
         {
-          source: {
-            type: "/user"
-          },
+          op: "write",
           locks: [{
+            lock: "hasType",
+            args: ["/user"]
+          }, {
             lock: "attrEq",
             args: ["role", "admin"]
           }]
         }
-
       ],
-      actions: [{
-        name: "delete"
-      }]
+      //specify what should happen if the policy does not comply
+      actions: {
+        "read": [{
+          action: "delete"
+        }]
+      }
     },
     "attribute_level_policies": {
       "user": {
         "password": [
           // the property can only be read by the user itself
           {
-            target: {
-              type: "/user"
-            },
+            op: "read",
             locks: [{
+              lock: "hasType",
+              args: ["/user"]
+            }, {
               lock: "isOwner"
             }]
-          },
+          }
           // the property can be set by the user itself and
-          {
-            source: {
-              type: "/user"
-            },
+          , {
+            op: "write",
             locks: [{
+              lock: "hasType",
+              args: ["/user"]
+            }, {
               lock: "isOwner"
             }]
           },
           // by all users with role admin
           {
-            source: {
-              type: "/user"
-            },
+            op: "write",
             locks: [{
+              lock: "hasType",
+              args: ["/user"]
+            }, {
               lock: "attrEq",
               args: ["role", "admin"]
             }]
@@ -163,16 +161,15 @@ var conf = {
         "role": [
           // can be read by everyone
           {
-            target: {
-              type: "/any"
-            }
+            op: "read"
           },
           // can only be changed by users with role admin
           {
-            source: {
-              type: "/user"
-            },
+            op: "write",
             locks: [{
+              lock: "hasType",
+              args: ["/user"]
+            }, {
               lock: "attrEq",
               args: ["role", "admin"]
             }]
@@ -183,28 +180,31 @@ var conf = {
         "credentials": [
           // the property can only be read by the user itself
           {
-            target: {
-              type: "/user"
-            },
+            op: "read",
             locks: [{
+              lock: "hasType",
+              args: ["/user"]
+            }, {
               lock: "isOwner"
             }]
           },
           // the property can be set by the user itself and
           {
-            source: {
-              type: "/user"
-            },
+            op: "write",
             locks: [{
+              lock: "hasType",
+              args: ["/user"]
+            }, {
               lock: "isOwner"
             }]
           },
           // by all users with role admin
           {
-            source: {
-              type: "/user"
-            },
+            op: "write",
             locks: [{
+              lock: "hasType",
+              args: ["/user"]
+            }, {
               lock: "attrEq",
               args: ["role", "admin"]
             }]
@@ -278,28 +278,31 @@ var additionalPolicy = {
   "files": [
     // the property can only be read by the user itself
     {
-      target: {
-        type: "/user"
-      },
+      op: "read",
       locks: [{
+        lock: "hasType",
+        args: ["/user"]
+      }, {
         lock: "isOwner"
       }]
-    },
+    }
     // the property can be set by the user itself and
-    {
-      source: {
-        type: "/user"
-      },
+    , {
+      op: "write",
       locks: [{
+        lock: "hasType",
+        args: ["/user"]
+      }, {
         lock: "isOwner"
       }]
     },
     // by all users with role admin
     {
-      source: {
-        type: "/user"
-      },
+      op: "write",
       locks: [{
+        lock: "hasType",
+        args: ["/user"]
+      }, {
         lock: "attrEq",
         args: ["role", "admin"]
       }]
@@ -380,7 +383,6 @@ function cleanDb(done) {
 }
 
 function buildUsers(done) {
-
   var arr = [idmcore.getPap().setDefaultEntityPolicies(admin_auth.id, admin_auth.type),
     idmcore.getStorage().createEntity(admin_auth.id, admin_auth.type, admin_auth.id, admin_auth)
   ];
@@ -392,7 +394,8 @@ function buildUsers(done) {
     }).then(function () {
       done();
     }, function (err) {
-      console.log("something went wrong while attempting to create users!!!!")
+      console.trace("Error "+err);
+      console.log("something went wrong while attempting to create users!!!!" + err)
       throw err;
     });
 }
@@ -686,7 +689,7 @@ describe('Entities Api (with policies)', function () {
       cleanDb(done);
     });
 
-    it('should return the list of policies of the entity', function (done) {
+    /*it('should return the list of policies of the entity', function (done) {
       idmcore.setMocks(null, null, null, dbconnection, null);
       var entity = clone(entity_1);
 
@@ -718,12 +721,13 @@ describe('Entities Api (with policies)', function () {
             if (!different) {
               done();
             }
-          }, function handlereject(error) {
-            throw error;
+          }).catch(function (err){
+            Error.stackTraceLimit = Infinity;
+            console.log(err.trace);
           });
       });
 
-    });
+    });*/
 
     it('set policy for entity', function (done) {
       idmcore.setMocks(null, null, null, dbconnection, null);
@@ -733,30 +737,19 @@ describe('Entities Api (with policies)', function () {
       }).then(function (entity) {
         return idmcore.getPap().getAttributePolicy(entity_id, entity_type, "files");
       }).then(function (filesPolicy) {
-        for (var i in filesPolicy.flows) {
-          for (var entry in filesPolicy.flows[i]) {
-            if (filesPolicy.flows[i].hasOwnProperty(entry)) {
-              //Remove the Entity class from the target and sources
-              if (filesPolicy.flows[i][entry].hasOwnProperty("type")) {
-                var type = filesPolicy.flows[i][entry].type;
-                filesPolicy.flows[i][entry] = {
-                  type: type
-                };
-              }
-              //Remove "not" attribute
-              if (entry === "locks") {
-                for (var j in filesPolicy.flows[i][entry]) {
-                  delete filesPolicy.flows[i][entry][j].not;
-                }
-              }
-            }
+
+        ulocks.init(conf.upfront.ulocks).then(function(){
+          var Policy = ulocks.Policy;
+          if(deepdif(filesPolicy, new Policy(additionalPolicy["files"])) === undefined){
+            done();
           }
-        }
-        return deepdif(filesPolicy.flows, additionalPolicy["files"]) === undefined;
-      }).then(function (equal) {
-        if (equal) {
-          done();
-        }
+          else{
+            console.log("policies don't match!!!!!")
+          }
+        })
+      }).catch(function (err){
+        Error.stackTraceLimit = Infinity;
+        console.log(err.trace);
       });
     });
 

@@ -24,7 +24,8 @@
     "grunt-contrib-jshint": "^1.0.0",
     "grunt-jsbeautifier": "^0.2.13",
     "rmdir": "1.2.0",
-    "mocha": "2.4.5"
+    "mocha": "2.4.5",
+    "ULocks":"git+https://github.com/SEDARI/ULocks#111c858cd19672c5fad586b90b7ed20f5d778ea9"
   },
   "scripts": {
     "test": "mocha tests/*.js"
