@@ -39,8 +39,8 @@ var conf = {
         read: 1
       },
       //fix this two eventually...
-      locks: "./node_modules/UPFROnt//ulocks/Locks",
-      actions: "./node_modules/UPFROnt/ulocks/Actions"
+      locks: "./node_modules/agile-policies/node_modules/UPFROnt/ulocks/Locks",
+      actions: "./node_modules/agile-policies/node_modules/UPFROnt/ulocks/Actions"
       /*locks: "./node_modules/UPFROnt/example/online/Locks/",
       actions: "./node_modules/UPFROnt/example/online/Actions"*/
     },
