@@ -8,9 +8,8 @@
     "test": "tests"
   },
   "dependencies": {
-    "UPFROnt": "git+https://github.com/SEDARI/UPFROnt#1189c3dab38e8bdff6829ea58e44b9f66216a792",
     "agile-idm-entity-storage": "git+https://github.com/Agile-IoT/agile-idm-entity-storage#v1.0.2",
-    "agile-upfront-leveldb": "git+https://github.com/Agile-IoT/agile-upfront-leveldb.git",
+    "agile-pdp": "git+https://github.com/Agile-IoT/agile-policies.git",
     "clone": "1.0.2",
     "http-errors": "^1.5.0",
     "jsonschema": "^1.1.0",
@@ -25,7 +24,7 @@
     "grunt-jsbeautifier": "^0.2.13",
     "rmdir": "1.2.0",
     "mocha": "2.4.5",
-    "ULocks":"git+https://github.com/SEDARI/ULocks#111c858cd19672c5fad586b90b7ed20f5d778ea9"
+    "ULocks": "git+https://github.com/SEDARI/ULocks#111c858cd19672c5fad586b90b7ed20f5d778ea9"
   },
   "scripts": {
     "test": "mocha tests/*.js"
