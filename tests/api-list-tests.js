@@ -381,7 +381,7 @@ describe('List Apis', function () {
               return idmcore.listEntitiesByEntityType(user_info, entity_type);
           }
         }).then(function (list) {
-          console.log("res" + JSON.stringify(list))
+          //console.log("res" + JSON.stringify(list))
           if (list.length == 1) {
             var data = list[0];
             if (data.token == lookedfor && entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type") //more detailed checks in cases when there is only one or more are executed in the sqlite3 tests

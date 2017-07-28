@@ -336,7 +336,7 @@ describe('Entities Api', function () {
           throw new Error('unexpec')
         }, function handlereject(error) {
           if (error.statusCode == 404) {
-            console.log("ok... not found...");
+            //console.log("ok... not found...");
             done();
           }
         }).catch(function (err) {

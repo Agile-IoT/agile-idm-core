@@ -465,8 +465,6 @@ describe('Api (PEP Read test)', function () {
       idmcore.setMocks(null, null, null, dbconnection);
       idmcore.createEntityAndSetOwner(admin_auth, entity_id, entity_type, entity, owner)
         .then(function (res) {
-          console.log("entity created "+JSON.stringify(res));
-          console.log("attempting to read it as  "+JSON.stringify(user_info_auth));
           return idmcore.readEntity(user_info_auth, res.id, res.type);
         }).then(function (read) {
           if (read.hasOwnProperty("credentials")) {
