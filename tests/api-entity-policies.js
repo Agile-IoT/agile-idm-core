@@ -6,6 +6,7 @@ var createError = require('http-errors');
 var fs = require('fs');
 var dbconnection = require('agile-idm-entity-storage').connectionPool;
 var ulocks = require('ULocks');
+var lo = require('lodash');
 var db;
 
 /*
@@ -94,6 +95,7 @@ var user_info = {
   "owner": "alice!@!agile-local"
 };
 
+
 var user_info_auth = clone(user_info);
 user_info_auth.id = "alice!@!agile-local";
 user_info_auth.type = "/user";
@@ -137,12 +139,12 @@ function buildUsers(done) {
       //  this is required when admin tries to create new admin users *but still, they own themselves*
       return idmcore.createEntityAndSetOwner(admin_auth, user_info_auth.id, user_info_auth.type, user_info, user_info_auth.id);
     }).then(function () {
-      done();
-    }, function (err) {
-      console.trace("Error "+err);
-      console.log("something went wrong while attempting to create users!!!!" + err)
-      throw err;
-    });
+    done();
+  }, function (err) {
+    console.trace("Error " + err);
+    console.log("something went wrong while attempting to create users!!!!" + err)
+    throw err;
+  });
 }
 
 //Tests!
@@ -168,8 +170,8 @@ describe('Entities Api (with policies)', function () {
             done();
           }
         }).catch(function (err) {
-          throw err;
-        });
+        throw err;
+      });
 
     });
 
@@ -187,18 +189,18 @@ describe('Entities Api (with policies)', function () {
               return idmcore.readEntity(admin_auth, entity_id, entity_type);
           }
         }).then(function (read) {
-          if (entity_id == read.id && entity_type === read.type && read.owner === admin_auth.id) {
-            delete read.id;
-            delete read.type;
-            delete read.owner;
-            if (deepdif.diff(read, entity) === undefined)
-              done();
-          }
-        }, function handlereject(r) {
-          throw r;
-        }).catch(function (err) {
-          throw err;
-        });
+        if (entity_id == read.id && entity_type === read.type && read.owner === admin_auth.id) {
+          delete read.id;
+          delete read.type;
+          delete read.owner;
+          if (deepdif.diff(read, entity) === undefined)
+            done();
+        }
+      }, function handlereject(r) {
+        throw r;
+      }).catch(function (err) {
+        throw err;
+      });
     });
   });
 
@@ -215,7 +217,8 @@ describe('Entities Api (with policies)', function () {
     it('should reject with 404 error when attempting to update data that is not there', function (done) {
       idmcore.setMocks(null, null, null, dbconnection, null);
       idmcore.setEntityAttribute(admin_auth, entity_id, entity_type, "attributename", "value")
-        .then(function (read) {}, function handlereject(error) {
+        .then(function (read) {
+        }, function handlereject(error) {
           if (error.statusCode === 404) {
             done();
           }
@@ -240,14 +243,14 @@ describe('Entities Api (with policies)', function () {
             }
           }
         }).then(function (result) {
-          if (entity_id === result.id && entity_type === result.type && result.owner === admin_auth.id) {
-            delete result.id;
-            delete result.type;
-            delete result.owner;
-            if (deepdif.diff(result, data2) == undefined)
-              return idmcore.readEntity(admin_auth, entity_id, entity_type);
-          }
-        })
+        if (entity_id === result.id && entity_type === result.type && result.owner === admin_auth.id) {
+          delete result.id;
+          delete result.type;
+          delete result.owner;
+          if (deepdif.diff(result, data2) == undefined)
+            return idmcore.readEntity(admin_auth, entity_id, entity_type);
+        }
+      })
         .then(function (read) {
           if (entity_id === read.id && entity_type === read.type && read.owner === admin_auth.id) {
             delete read.id;
@@ -275,13 +278,14 @@ describe('Entities Api (with policies)', function () {
     it('should reject with 404 error when attemtpting to delete data is not there', function (done) {
       idmcore.setMocks(null, null, null, dbconnection, null);
       idmcore.deleteEntity(admin_auth, entity_id, entity_type)
-        .then(function (read) {}, function handlereject(error) {
+        .then(function (read) {
+        }, function handlereject(error) {
           if (error.statusCode === 404) {
             done();
           }
         }).catch(function (err) {
-          throw err;
-        });
+        throw err;
+      });
     });
 
     it('should delete an entity by id', function (done) {
@@ -297,16 +301,16 @@ describe('Entities Api (with policies)', function () {
               return idmcore.deleteEntity(admin_auth, entity_id, entity_type);
           }
         }).then(function () {
-          return idmcore.readEntity(admin_auth, entity_id, entity_type);
-        }).then(function (read) {
+        return idmcore.readEntity(admin_auth, entity_id, entity_type);
+      }).then(function (read) {
 
-        }, function handlereject(error) {
-          if (error.statusCode == 404) {
-            done();
-          }
-        }).catch(function (err) {
-          throw err;
-        });
+      }, function handlereject(error) {
+        if (error.statusCode == 404) {
+          done();
+        }
+      }).catch(function (err) {
+        throw err;
+      });
     });
   });
 
@@ -323,17 +327,17 @@ describe('Entities Api (with policies)', function () {
     it('should reject with 404 error when there is no entity with attribute value and type', function (done) {
       idmcore.setMocks(null, null, null, dbconnection, null);
       idmcore.listEntitiesByAttributeValueAndType(admin_auth, [{
-          attribute_type: "ss",
-          attribute_value: "unexistent-stuff"
-        }])
+        attribute_type: "ss",
+        attribute_value: "unexistent-stuff"
+      }])
         .then(function (read) {
           if (read instanceof Array && read.length === 0)
             done();
         }, function handlereject(error) {
 
         }).catch(function (err) {
-          throw err;
-        });
+        throw err;
+      });
 
     });
 
@@ -353,31 +357,31 @@ describe('Entities Api (with policies)', function () {
               return idmcore.createEntity(admin_auth, "someotherid", entity_type, entity)
           }
         }).then(function (data) {
-          if ("someotherid" === data.id && entity_type === data.type && data.owner === admin_auth.id) {
-            delete data.id;
-            delete data.type;
-            delete data.owner;
-            if (deepdif.diff(data, entity) == undefined)
-              return idmcore.listEntitiesByAttributeValueAndType(admin_auth, [{
-                attribute_type: "token",
-                attribute_value: lookedfor
-              }]);
-          }
-        }).then(function (list) {
-          if (list.length === 1) {
-            var data = list[0];
-            if (data.token === lookedfor && entity_id === data.id && entity_type === data.type && data.owner === admin_auth.id) //more detailed checks in cases when there is only one or more are executed in the sqlite3 tests
-              done();
-            else
-              throw new Error("unexpected entity");
+        if ("someotherid" === data.id && entity_type === data.type && data.owner === admin_auth.id) {
+          delete data.id;
+          delete data.type;
+          delete data.owner;
+          if (deepdif.diff(data, entity) == undefined)
+            return idmcore.listEntitiesByAttributeValueAndType(admin_auth, [{
+              attribute_type: "token",
+              attribute_value: lookedfor
+            }]);
+        }
+      }).then(function (list) {
+        if (list.length === 1) {
+          var data = list[0];
+          if (data.token === lookedfor && entity_id === data.id && entity_type === data.type && data.owner === admin_auth.id) //more detailed checks in cases when there is only one or more are executed in the sqlite3 tests
+            done();
+          else
+            throw new Error("unexpected entity");
 
-          }
-          //return idmcore.readEntity(token, entity_id, entity_type);
-        }, function handlereject(error) {
-          throw error;
-        }).catch(function (err) {
-          throw err;
-        });
+        }
+        //return idmcore.readEntity(token, entity_id, entity_type);
+      }, function handlereject(error) {
+        throw error;
+      }).catch(function (err) {
+        throw err;
+      });
 
     });
 
@@ -397,29 +401,29 @@ describe('Entities Api (with policies)', function () {
               return idmcore.createEntity(admin_auth, "someotherid", entity_type, entity)
           }
         }).then(function (data) {
-          if ("someotherid" === data.id && entity_type === data.type && data.owner === admin_auth.id) {
-            delete data.id;
-            delete data.type;
-            delete data.owner;
-            if (deepdif.diff(data, entity) == undefined)
-              return idmcore.listEntitiesByAttributeValueAndType(admin_auth, [{
-                attribute_type: "token",
-                attribute_value: lookedfor
-              }], "unexistent_entity_typoe");
-          }
-        }).then(function (list) {
-          if (list.length === 0) {
-            done();
+        if ("someotherid" === data.id && entity_type === data.type && data.owner === admin_auth.id) {
+          delete data.id;
+          delete data.type;
+          delete data.owner;
+          if (deepdif.diff(data, entity) == undefined)
+            return idmcore.listEntitiesByAttributeValueAndType(admin_auth, [{
+              attribute_type: "token",
+              attribute_value: lookedfor
+            }], "unexistent_entity_typoe");
+        }
+      }).then(function (list) {
+        if (list.length === 0) {
+          done();
 
-          }
-          //return idmcore.readEntity(token, entity_id, entity_type);
-        }).then(function (read) {
+        }
+        //return idmcore.readEntity(token, entity_id, entity_type);
+      }).then(function (read) {
 
-        }, function handlereject(error) {
-          throw error;
-        }).catch(function (err) {
-          throw err;
-        });
+      }, function handlereject(error) {
+        throw error;
+      }).catch(function (err) {
+        throw err;
+      });
 
     });
   });
@@ -434,45 +438,48 @@ describe('Entities Api (with policies)', function () {
       cleanDb(done);
     });
 
-    /*it('should return the list of policies of the entity', function (done) {
+    it('should return the list of policies of the entity', function (done) {
       idmcore.setMocks(null, null, null, dbconnection, null);
-      var entity = clone(entity_1);
+      var user = clone(user_info);
+      user.id = "alice";
+      user.type = "/user";
+      idmcore.createEntity(admin_auth, user.id, user.type, user).then(function () {
+        idmcore.getEntityPolicies(user_info_auth, user_info_auth.id, user_info_auth.type)
+          .then(function (policies) {
 
-      idmcore.createEntity(user_info_auth, entity_id, entity_type, entity).then(function (data) {
+            delete policies.properties["groups"];
+            delete policies.properties["entities"];
 
-        idmcore.getEntityPolicies(user_info_auth, entity_id, entity_type)
-          .then(function (policies) { // policies: properties/entities/self = top_level_policies
-            //
-            entity_type = entity_type.replace("/", "");
-            //Check deeper level of policies, check agile-idm-web-ui as example /rpi-conf
-            var different = false;
-            for (var attribute in policies) {
+            return ulocks.init(conf.upfront.ulocks).then(function () {
+              var Policy = ulocks.Policy;
+              for (var attribute in conf.policies.attribute_level_policies.user) {
+                var path = lo.split(attribute, '.');
+                var attributePath = path.shift();
+                for (var i in path) {
+                  attributePath += ".properties." + path[i];
+                }
 
-              if (conf.policies.attribute_level_policies[entity_type].hasOwnProperty(attribute)) {
-
-                different = deepdif.diff(conf.policies.attribute_level_policies[entity_type][attribute],
-                  policies[attribute].self) !== undefined;
-                if (different) {
-                  break;
+                if (deepdif.diff(new Policy(conf.policies.attribute_level_policies.user[attribute]), lo.get(policies.properties, attributePath).self)
+                  !== undefined) {
+                  return true;
                 }
               }
-            }
-            if (!different) {
-              different = deepdif.diff(conf.policies.top_level_policy, policies.self) !== undefined; //also check the top_level_policy
-            }
-            return different;
+              return deepdif.diff(new Policy(conf.policies.top_level_policy), policies.self) !== undefined
+            });
 
-          }).then(function (different) {
-            if (!different) {
-              done();
-            }
-          }).catch(function (err){
-            Error.stackTraceLimit = Infinity;
-            console.log(err.trace);
-          });
+          }).then(function (policiesDiffer) {
+          if (!policiesDiffer) {
+            done();
+          } else {
+            console.log("policies don't match!!!!!")
+          }
+        }).catch(function (err) {
+          Error.stackTraceLimit = Infinity;
+          console.log(err.trace);
+        });
       });
 
-    });*/
+    });
 
     it('set policy for entity', function (done) {
       idmcore.setMocks(null, null, null, dbconnection, null);
@@ -483,16 +490,16 @@ describe('Entities Api (with policies)', function () {
         return idmcore.getPap().getAttributePolicy(entity_id, entity_type, "files");
       }).then(function (filesPolicy) {
 
-        ulocks.init(conf.upfront.ulocks).then(function(){
+        ulocks.init(conf.upfront.ulocks).then(function () {
           var Policy = ulocks.Policy;
-          if(deepdif(filesPolicy, new Policy(additionalPolicy["files"])) === undefined){
+          if (deepdif(filesPolicy, new Policy(additionalPolicy["files"])) === undefined) {
             done();
           }
-          else{
+          else {
             console.log("policies don't match!!!!!")
           }
         })
-      }).catch(function (err){
+      }).catch(function (err) {
         Error.stackTraceLimit = Infinity;
         console.log(err.trace);
       });
@@ -519,4 +526,5 @@ describe('Entities Api (with policies)', function () {
       });
     });
   });
-});
+})
+;
