@@ -139,7 +139,7 @@ function buildUsers(done) {
     }).then(function () {
       done();
     }, function (err) {
-      console.trace("Error "+err);
+      console.trace("Error " + err);
       console.log("something went wrong while attempting to create users!!!!" + err)
       throw err;
     });
@@ -483,16 +483,15 @@ describe('Entities Api (with policies)', function () {
         return idmcore.getPap().getAttributePolicy(entity_id, entity_type, "files");
       }).then(function (filesPolicy) {
 
-        ulocks.init(conf.upfront.ulocks).then(function(){
+        ulocks.init(conf.upfront.ulocks).then(function () {
           var Policy = ulocks.Policy;
-          if(deepdif(filesPolicy, new Policy(additionalPolicy["files"])) === undefined){
+          if (deepdif(filesPolicy, new Policy(additionalPolicy["files"])) === undefined) {
             done();
-          }
-          else{
+          } else {
             console.log("policies don't match!!!!!")
           }
         })
-      }).catch(function (err){
+      }).catch(function (err) {
         Error.stackTraceLimit = Infinity;
         console.log(err.trace);
       });
