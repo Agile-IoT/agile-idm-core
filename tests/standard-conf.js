@@ -2,11 +2,11 @@ module.exports = {
   "storage": {
     "dbName": "./database"
   },
-  "upfront_storage":{
-      module_name: "agile-upfront-leveldb",
-      type: "external",
-      dbName: "./pap-database",
-      collection: "policies"
+  "upfront_storage": {
+    module_name: "agile-upfront-leveldb",
+    type: "external",
+    dbName: "./pap-database",
+    collection: "policies"
   },
   "policies": {
     "create_entity_policy": [
@@ -143,6 +143,14 @@ module.exports = {
 
     }
   },
+  "forbidden-attribute-names": [
+    'id',
+    'type',
+    'owner',
+    'groups',
+    'entities',
+    'actions'
+  ],
   "schema-validation": [{
     "id": "/sensor",
     "type": "object",
@@ -184,7 +192,7 @@ module.exports = {
       }
     },
     "required": ["user_name", "auth_type"]
-  },{
+  }, {
     "id": "/other",
     "type": "object",
     "additionalProperties": false,
