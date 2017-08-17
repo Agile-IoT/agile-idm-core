@@ -8,6 +8,8 @@ module.exports = {
     dbName: "./pap-database",
     collection: "policies"
   },
+  custom_actions:  __dirname + "/Actions",
+  custom_locks:  __dirname + "/Locks",
   "policies": {
     "create_entity_policy": [
       // actions of an actor are not restricted a priori
