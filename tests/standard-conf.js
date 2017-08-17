@@ -8,8 +8,8 @@ module.exports = {
     dbName: "./pap-database",
     collection: "policies"
   },
-  custom_actions:  __dirname + "/Actions",
-  custom_locks:  __dirname + "/Locks",
+  custom_actions: __dirname + "/Actions",
+  custom_locks: __dirname + "/Locks",
   "policies": {
     "create_entity_policy": [
       // actions of an actor are not restricted a priori
@@ -53,6 +53,50 @@ module.exports = {
           action: "delete"
         }]
       }
+    },
+    "action-policy-root": {
+      attribute: "actions",
+      policy: [{
+          op: "read",
+          locks: [{
+            lock: "hasType",
+            args: ["/user"]
+          }, {
+            lock: "isOwner"
+          }]
+        },
+        // by all users with role admin
+        {
+          op: "read",
+          locks: [{
+            lock: "hasType",
+            args: ["/user"]
+          }, {
+            lock: "attrEq",
+            args: ["role", "admin"]
+          }]
+        },
+        {
+          op: "write",
+          locks: [{
+            lock: "hasType",
+            args: ["/user"]
+          }, {
+            lock: "isOwner"
+          }]
+        },
+        // by all users with role admin
+        {
+          op: "write",
+          locks: [{
+            lock: "hasType",
+            args: ["/user"]
+          }, {
+            lock: "attrEq",
+            args: ["role", "admin"]
+          }]
+        }
+      ]
     },
     "attribute_level_policies": {
       "user": {
