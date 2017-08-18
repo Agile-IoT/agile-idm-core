@@ -252,7 +252,7 @@ module.exports = {
     },
     "required": ["name"]
   }],
-  "audit":{
+  "audit": {
     dbName: "database_",
     //according to https://www.npmjs.com/package/timeframe-to-seconds,
     timeframe: '1m',
