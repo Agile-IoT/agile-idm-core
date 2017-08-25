@@ -24,7 +24,7 @@
     "grunt-jsbeautifier": "^0.2.13",
     "rmdir": "1.2.0",
     "mocha": "2.4.5",
-    "ULocks": "git+https://github.com/SEDARI/ULocks#111c858cd19672c5fad586b90b7ed20f5d778ea9",
+    "ulocks": "git+https://github.com/SEDARI/uLocks#v0.5.0",
     "winston": "^2.3.1"
   },
   "scripts": {

@@ -5,7 +5,7 @@ var deepdif = require('deep-diff');
 var createError = require('http-errors');
 var fs = require('fs');
 var dbconnection = require('agile-idm-entity-storage').connectionPool;
-var ulocks = require('ULocks');
+var ulocks = require('ulocks');
 var db;
 
 /*
