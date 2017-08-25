@@ -138,12 +138,11 @@ describe('Api (PEP Write Test)', function () {
     });
 
     afterEach(function (done) {
-
       cleanDb(done);
     });
 
     it('should reject with 403 and conflicts array when attempting to update  an entity\'s attribute without the proper role and not owner', function (done) {
-      var entity_id = "1234";
+      var entity_id = "username!@!some-type";
       var entity_type = "/user";
       var owner = "username!@!some-type";
       var entity = {
@@ -164,7 +163,7 @@ describe('Api (PEP Write Test)', function () {
     });
 
     it('should reject with 403 and conflicts array when an owner (non-admin) attempts to update  his own role', function (done) {
-      var entity_id = "1234";
+      var entity_id = "username!@!some-type";
       var entity_type = "/user";
       var owner = "username!@!some-type";
       var entity = {

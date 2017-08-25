@@ -54,6 +54,57 @@ module.exports = {
         }]
       }
     },
+    //default policy for policy field
+    "policy-policy-root": {
+      attribute: "policies",
+      policy: [{
+          op: "read",
+          locks: [{
+            lock: "hasType",
+            args: ["/user"]
+          }, {
+            lock: "isOwner"
+          }]
+        },
+        // by all users with role admin
+        {
+          op: "read",
+          locks: [{
+            lock: "hasType",
+            args: ["/user"]
+          }, {
+            lock: "attrEq",
+            args: ["role", "admin"]
+          }]
+        },
+        {
+          op: "write",
+          locks: [{
+            lock: "hasType",
+            args: ["/user"]
+          }, {
+            lock: "isOwner"
+          }]
+        },
+        // by all users with role admin
+        {
+          op: "write",
+          locks: [{
+            lock: "hasType",
+            args: ["/user"]
+          }, {
+            lock: "attrEq",
+            args: ["role", "admin"]
+          }]
+        }
+      ],
+      readAll: [{
+        op: "read"
+      }]
+    },
+    //restricts the policy composition tree (policy.policy) read only  = 1 (policy.policy.policy) = 2
+    //in other terms 1 does not allow for policy updates, 2 allows for policy update but no meta-policy update, etc.
+    "policy-level": 1,
     "action-policy-root": {
       attribute: "actions",
       policy: [{
@@ -265,7 +316,8 @@ module.exports = {
     'owner',
     'groups',
     'entities',
-    'actions'
+    'actions',
+    'policy'
   ],
   "schema-validation": [{
     "id": "/sensor",
