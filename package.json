@@ -25,6 +25,7 @@
     "rmdir": "1.2.0",
     "mocha": "2.4.5",
     "ulocks": "git+https://github.com/SEDARI/uLocks#v0.5.0",
+    "agile-audit": "git+https://github.com/agile-iot/agile-audit#v0.1.0",
     "winston": "^2.3.1"
   },
   "scripts": {
