@@ -158,7 +158,7 @@ module.exports = {
             op: "read",
             locks: [{
               lock: "actionExecLessThan",
-              args : ['password',5]
+              args: ['password', 5]
             }]
           },
           {
@@ -178,8 +178,7 @@ module.exports = {
               args: ["/user"]
             }, {
               lock: "isOwner"
-            }
-            ]
+            }]
           },
           // by all users with role admin
           {

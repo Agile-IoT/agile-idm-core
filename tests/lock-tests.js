@@ -96,7 +96,7 @@ describe('UsedLessThan lock', function () {
       idmcore.setMocks(null, null, null, dbconnection);
       idmcore.setEntityAttribute(admin_auth, alice_info_auth.id, alice_info_auth.type, "password", "2")
         .then(function (res) {
-          return idmcore.readEntity(admin_auth,alice_info_auth.id, alice_info_auth.type);
+          return idmcore.readEntity(admin_auth, alice_info_auth.id, alice_info_auth.type);
         }).then(function (read) {
           console.log(read.password);
           done();

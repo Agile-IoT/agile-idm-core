@@ -93,7 +93,7 @@ describe('Api (PEP Write Test)', function () {
 
     it('should reject with 403 and conflicts array in the object when attempting to create an entity without the proper role', function (done) {
 
-      var entity_id = "1";
+      var entity_id = "username!@!some-type";
       var entity_type = "/user";
       var owner = "username!@!some-type";
       var entity = {
@@ -112,7 +112,7 @@ describe('Api (PEP Write Test)', function () {
     });
 
     it('should resolve with the entity when  attempting to create an entity with the proper role', function (done) {
-      var entity_id = "1";
+      var entity_id = "username!@!some-type";
       var owner = "username!@!some-type";
       var entity_type = "/user";
       var entity = {
@@ -184,7 +184,7 @@ describe('Api (PEP Write Test)', function () {
     });
 
     it('should resolve  when attempting to update  an entity attribute with the proper role', function (done) {
-      var entity_id = "1";
+      var entity_id = "username!@!some-type";
       var entity_type = "/user";
       var owner = "username!@!some-type";
       var entity = {
@@ -217,7 +217,7 @@ describe('Api (PEP Write Test)', function () {
     });
 
     it('should resolve  when attempting to update  an entity attribute with the proper role', function (done) {
-      var entity_id = "1";
+      var entity_id = "username!@!some-type";
       var entity_type = "/user";
       var owner = "username!@!some-type";
       var entity = {

@@ -164,7 +164,7 @@ describe('Api (PEP Read test)', function () {
         }
       }
       idmcore.setMocks(null, null, null, dbconnection);
-      idmcore.createEntityAndSetOwner(admin_auth, entity_id, entity_type, entity, entity_id)
+      idmcore.createEntityAndSetOwner(admin_auth, entity_id, entity_type, entity, owner)
         .then(function (res) {
           return idmcore.readEntity(res, res.id, res.type);
         }).then(function (data) {
@@ -189,7 +189,7 @@ describe('Api (PEP Read test)', function () {
         "password": "value"
       }
       idmcore.setMocks(null, null, null, dbconnection);
-      idmcore.createEntityAndSetOwner(admin_auth, entity_id, entity_type, entity, entity_id)
+      idmcore.createEntityAndSetOwner(admin_auth, entity_id, entity_type, entity, owner)
         .then(function (res) {
           return idmcore.readEntity(res, res.id, res.type);
         }).then(function (data) {
@@ -206,7 +206,7 @@ describe('Api (PEP Read test)', function () {
     });
 
     it('should resolve with the entity when attempting to create an entity with the proper role', function (done) {
-      var entity_id = "1";
+      var entity_id = "username!@!some-type";
       var owner = "username!@!some-type";
       var entity_type = "/user";
       var entity = {
@@ -237,7 +237,7 @@ describe('Api (PEP Read test)', function () {
     });
 
     it('should resolve with an array without entities for which the attributes used in the query are not allowed to be read by the policy', function (done) {
-      var entity_id = "1";
+      var entity_id = "username!@!some-type";
       var owner = "username!@!some-type";
       var entity_type = "/user";
       var entity = {

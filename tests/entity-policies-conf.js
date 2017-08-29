@@ -58,24 +58,7 @@ module.exports = {
     "policy-policy-root": {
       attribute: "policies",
       policy: [{
-          op: "read",
-          locks: [{
-            lock: "hasType",
-            args: ["/user"]
-          }, {
-            lock: "isOwner"
-          }]
-        },
-        // by all users with role admin
-        {
-          op: "read",
-          locks: [{
-            lock: "hasType",
-            args: ["/user"]
-          }, {
-            lock: "attrEq",
-            args: ["role", "admin"]
-          }]
+          op: "read"
         },
         {
           op: "write",
@@ -104,7 +87,7 @@ module.exports = {
     },
     //restricts the policy composition tree (policy.policy) read only  = 1 (policy.policy.policy) = 2
     //in other terms 1 does not allow for policy updates, 2 allows for policy update but no meta-policy update, etc.
-    "policy-level": 1,
+    "policy-level": 2,
     "action-policy-root": {
       attribute: "actions",
       policy: [{
@@ -201,6 +184,24 @@ module.exports = {
             }]
           }
         ],
+        //meta-policy for role.
+        "policies.role": [
+          // can be read by everyone
+          {
+            op: "read"
+          },
+          // can only be changed by users with role admin
+          {
+            op: "write",
+            locks: [{
+              lock: "hasType",
+              args: ["/user"]
+            }, {
+              lock: "attrEq",
+              args: ["role", "admin"]
+            }]
+          }
+        ],
         "credentials": [
           // the property can only be read by the user itself
           {
@@ -227,7 +228,6 @@ module.exports = {
             }]
           }
         ],
-
         "credentials.dropbox": [{
             op: "read",
             locks: [{
