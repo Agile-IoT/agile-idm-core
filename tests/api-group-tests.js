@@ -323,7 +323,9 @@ describe('Groups Api', function () {
               return (group_name == v.group_name && v.owner == owner);
             }).length == 0)
             done();
-        }, function handlereject(error) {});
+        }).catch(function(error) {
+          console.log('something went wrong here '+error)
+        });
     });
 
   });
