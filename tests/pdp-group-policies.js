@@ -321,7 +321,7 @@ describe('Groups Api with policies', function () {
         }).then(function () {
           return idmcore.readEntity(user_info_auth, entity_id, entity_type);
         }).then(function (entityFinal) {
-          if (!entityFinal.hasOwnProperty('groups') || entityFinal.groups.length === 0 )
+          if (!entityFinal.hasOwnProperty('groups') || entityFinal.groups.length === 0)
             done();
           else {
             throw new Error("unexptecter result after deleting entity from group " + JSON.stringify(entityFinal));

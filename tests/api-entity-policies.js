@@ -503,23 +503,27 @@ describe('Entities Api (with policies)', function () {
       idmcore.createEntity(user_info_auth, entity_id, entity_type, entity).then(function (data) {
         return idmcore.setEntityPolicy(user_info_auth, entity_id, entity_type, "files", additionalPolicy["files"]);
       }).then(function (policy) {
-        if(JSON.stringify(policy).indexOf("files")<0){
+        if (!policy.hasOwnProperty("files")) {
           console.log("error... it seems the policy does not have files!");
+        } else {
+          return idmcore.deleteEntityPolicy(user_info_auth, entity_id, entity_type, "files");
         }
-        return idmcore.deleteEntityPolicy(user_info_auth, entity_id, entity_type, "files");
+
       }).then(function (policy) {
-        return idmcore.getEntityPolicies(user_info_auth, entity_id, entity_type);
-      }).then(function (policy) {
-        if(JSON.stringify(policy).indexOf("files")>=0){
+        if (policy.hasOwnProperty("files")) {
           console.log("error... it seems the policy does have files after deleting it!");
+        } else {
+          return idmcore.getEntityPolicies(user_info_auth, entity_id, entity_type);
         }
-        //TODO policy should be checked with UPFRONT after the issue is resolved. Avoid string checkes once this issue is resolved: https://github.com/SEDARI/UPFROnt/issues/5
-        /*console.log(JSON.stringify(policy))
-        var p = new Policy(policy);*/
 
-        done();
+      }).then(function (policy) {
+        if (policy.hasOwnProperty("files")) {
+          console.log("error... it seems the policy does have files after deleting it!");
+        } else {
+          done();
+        }
 
-      }).catch( function(error) {
+      }).catch(function (error) {
         throw error;
       });
     });
