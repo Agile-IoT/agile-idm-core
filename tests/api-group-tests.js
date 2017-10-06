@@ -25,6 +25,7 @@ var token = "6328602477442473";
 var action = "create";
 var entity_type = "/sensor";
 var entity_id = "323";
+var entity_id_324 = "324";
 var entity_1 = {
   "name": "Barack Obam2a",
   "token": "DC 20500"
@@ -327,6 +328,56 @@ describe('Groups Api', function () {
           console.log('something went wrong here ' + error)
         });
     });
+
+	  it('should resolve with two modified entities with one having no group and the other is still in the group, while adding both and removing one of them form the group', function (done) {
+		  var idmcore = new IdmCore(conf);
+		  idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
+		  var owner = token + "!@!" + "auth_type";
+		  var ps = [idmcore.createEntity(user_info, entity_id, entity_type, entity_1), idmcore.createEntity(user_info, entity_id_324, entity_type, entity_1), idmcore.createGroup(user_info, group_name)];
+		  Promise.all(ps)
+			  .then(function (read) {
+				  return idmcore.addEntityToGroup(user_info, group_name, owner, entity_id, entity_type);
+			  }).then(function (res) {
+			  return idmcore.readEntity(user_info, entity_id, entity_type);
+		  }).then(function (entityFinal) {
+			  if (entityFinal.groups.filter(function (v) {
+					  return (group_name == v.group_name && v.owner == owner);
+				  }).length == 1)
+				  return idmcore.addEntityToGroup(user_info, group_name, owner, entity_id_324, entity_type);
+		  }).then(function (res) {
+			  return idmcore.readEntity(user_info, entity_id_324, entity_type);
+		  }).then(function (entityFinal) {
+			  if (entityFinal.groups.filter(function (v) {
+					  return (group_name == v.group_name && v.owner == owner);
+				  }).length == 1)
+				  return idmcore.removeEntityFromGroup(user_info, group_name, owner, entity_id_324, entity_type);
+		  }).then(function () {
+			  return idmcore.readEntity(user_info, entity_id_324, entity_type);
+		  }).then(function (entityFinal) {
+		    if(entityFinal.groups.length === 0)
+			    return true;
+		    else
+			    throw new Error('Entity is still in a group: ' + JSON.stringify(entityFinal));
+		  }).then(function() {
+		    return idmcore.readGroup(user_info, group_name, owner);
+      }).then(function (read) {
+        if (group_name === read.group_name && read.owner === owner) {
+	        if(read.entities.length === 1 && read.entities[0].id === entity_id && read.entities[0].type === entity_type) {
+            return true;
+          }
+        }
+			  throw new Error('Too many entries removed from the group: ' + JSON.stringify(read));
+      }).then(function () {
+			    return idmcore.readEntity(user_info, entity_id, entity_type);
+		  }).then(function (entityFinal) {
+			  if (entityFinal.groups.filter(function (v) {
+					  return (group_name == v.group_name && v.owner == owner);
+				  }).length == 1)
+				  done();
+		  }).catch(function (error) {
+			  console.log('something went wrong here ' + error)
+		  });
+	  });
 
   });
 });
