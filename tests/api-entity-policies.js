@@ -448,11 +448,13 @@ describe('Entities Api (with policies)', function () {
             var different = false;
             for (var attribute in policies) {
               if (conf.policies.attribute_level_policies[entity_type].hasOwnProperty(attribute)) {
-                console.log(JSON.stringify(conf.policies.attribute_level_policies[entity_type][attribute]));
-                console.log(JSON.stringify(policies[attribute].flows));
-	              //different = deepdif.diff(policies[attribute].flows, conf.policies.attribute_level_policies[entity_type][attribute]) !== undefined;
-
-                different = JSON.stringify(policies[attribute].flows) !== JSON.stringify(conf.policies.attribute_level_policies[entity_type][attribute]);
+	              console.log('DEEPDIFF of', attribute);
+                // console.log(JSON.stringify(conf.policies.attribute_level_policies[entity_type][attribute]));
+                // console.log(JSON.stringify(policies[attribute].flows));
+	              // different = deepdif.diff(policies[attribute].flows, conf.policies.attribute_level_policies[entity_type][attribute]) !== undefined;
+	              different = deepdif.diff(policies[attribute].flows, conf.policies.attribute_level_policies[entity_type][attribute]) !== undefined;
+	              console.log(deepdif.diff(policies[attribute].flows, conf.policies.attribute_level_policies[entity_type][attribute]));
+                //different = JSON.stringify(policies[attribute].flows) !== JSON.stringify(conf.policies.attribute_level_policies[entity_type][attribute]);
                 if (different) {
                   break;
                 }
