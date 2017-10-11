@@ -342,6 +342,39 @@ describe('Entities Api', function () {
         });
 
     });
+
+	  it('should reject with 400 when attempting to remove the groups attribute if the entity is still in a group', function (done) {
+		  var idmcore = new IdmCore(conf);
+		  idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
+		  var group_name = "mygroup";
+		  var owner = token + "!@!" + "auth_type";
+		  var entity;
+		  var ps = [idmcore.createEntity(user_info, entity_id, entity_type, entity_1), idmcore.createGroup(user_info, group_name)];
+		  Promise.all(ps)
+			  .then(function (read) {
+				  return idmcore.addEntityToGroup(user_info, group_name, owner, entity_id, entity_type);
+			  }).then(function (res) {
+			    return idmcore.readEntity(user_info, entity_id, entity_type);
+		    }).then(function (data) {
+				  if (entity_id == data.id && entity_type == data.type && data.owner == token + "!@!" + "auth_type" && data.groups && data.groups.length > 0) {
+				    entity = clone(data);
+				    return idmcore.deleteEntityAttribute(user_info, entity_id, entity_type, "groups");
+				  } else {
+				    throw new Error("Entity not found or is in no group");
+          }
+			  }).then(function (result) {
+			    if(entity.groups && !result.groups) {
+				    throw new Error("this attribute should not have been removed!");
+			    }
+		  }, function handlereject(r) {
+			  if (r.statusCode === 400) {
+				  done();
+			  } else {
+				  throw r;
+			  }
+		  });
+
+	  });
   });
 
   describe('#delete and readEntity()', function () {
