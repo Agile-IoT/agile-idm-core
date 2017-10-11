@@ -24,26 +24,31 @@ module.exports = {
       flows: [
         // all properties can be read by everyone
         {
-          op: "read"
+          op: "read",
+          locks:[]
         },
         // all properties can only be changed by the owner of the entity
         {
           op: "write",
           locks: [{
             lock: "hasType",
-            args: ["/user"]
+            args: ["/user"],
+            not: false
           }, {
-            lock: "isOwner"
+            lock: "isOwner",
+	          not: false
           }]
         },
         {
           op: "write",
           locks: [{
             lock: "hasType",
-            args: ["/user"]
+            args: ["/user"],
+	          not: false
           }, {
             lock: "attrEq",
-            args: ["role", "admin"]
+            args: ["role", "admin"],
+	          not: false
           }]
         }
       ],
@@ -263,16 +268,19 @@ module.exports = {
         "credentials": [
           // the property can only be read by the user itself
           {
-            op: "read"
+            op: "read",
+	          locks: []
           },
           // the property can be set by the user itself and
           {
             op: "write",
             locks: [{
               lock: "hasType",
-              args: ["/user"]
+              args: ["/user"],
+	            not: false
             }, {
-              lock: "isOwner"
+              lock: "isOwner",
+              not: false
             }]
           }
         ],
@@ -280,18 +288,22 @@ module.exports = {
             op: "read",
             locks: [{
               lock: "hasType",
-              args: ["/user"]
+              args: ["/user"],
+	            not: false
             }, {
-              lock: "isOwner"
+              lock: "isOwner",
+	            not: false
             }]
           },
           {
             op: "write",
             locks: [{
               lock: "hasType",
-              args: ["/user"]
+              args: ["/user"],
+              not: false
             }, {
-              lock: "isOwner"
+              lock: "isOwner",
+              not: false
             }]
           },
           // by all users with role admin
@@ -299,10 +311,12 @@ module.exports = {
             op: "write",
             locks: [{
               lock: "hasType",
-              args: ["/user"]
+              args: ["/user"],
+              not: false
             }, {
               lock: "attrEq",
-              args: ["role", "admin"]
+              args: ["role", "admin"],
+              not: false
             }]
           }
         ]

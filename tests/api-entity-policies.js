@@ -6,6 +6,7 @@ var createError = require('http-errors');
 var fs = require('fs');
 var dbconnection = require('agile-idm-entity-storage').connectionPool;
 var ulocks = require('ulocks');
+var lo = require('lodash');
 var db;
 
 /*
@@ -434,31 +435,41 @@ describe('Entities Api (with policies)', function () {
       cleanDb(done);
     });
 
-    /*it('should return the list of policies of the entity', function (done) {
+    it('should return the list of policies of the entity', function (done) {
       idmcore.setMocks(null, null, null, dbconnection, null);
       var entity = clone(entity_1);
 
       idmcore.createEntity(user_info_auth, entity_id, entity_type, entity).then(function (data) {
-
         idmcore.getEntityPolicies(user_info_auth, entity_id, entity_type)
           .then(function (policies) { // policies: properties/entities/self = top_level_policies
-            //
             entity_type = entity_type.replace("/", "");
+	          var confPolicies = {};
+	          confPolicies.attribute_level = {};
+	          confPolicies.attribute_level[entity_type] = {};
+	          confPolicies.top_level = conf.policies.top_level_policy;
+
             //Check deeper level of policies, check agile-idm-web-ui as example /rpi-conf
             var different = false;
             for (var attribute in policies) {
+	           // console.log(new Policy(conf.policies.attribute_level_policies[entity_type][attribute]));
+              if (lo.has(conf.policies.attribute_level_policies[entity_type], attribute)) {
+	              lo.set(confPolicies.attribute_level[entity_type], attribute, lo.get(conf.policies.attribute_level_policies[entity_type], attribute));
 
-              if (conf.policies.attribute_level_policies[entity_type].hasOwnProperty(attribute)) {
+	              // console.log(JSON.stringify(lo.get(confPolicies.attribute_level[entity_type],attribute)));
+                // console.log(JSON.stringify(lo.get(policies, attribute).flows));
+	              //different = deepdif.diff(lo.get(policies, attribute).flows, lo.get(confPolicies.attribute_level[entity_type],attribute)) !== undefined;
 
-                different = deepdif.diff(conf.policies.attribute_level_policies[entity_type][attribute],
-                  policies[attribute].self) !== undefined;
+                different = JSON.stringify(lo.get(policies, attribute).flows) !== JSON.stringify(lo.get(confPolicies.attribute_level[entity_type],attribute));
                 if (different) {
                   break;
                 }
               }
             }
+
             if (!different) {
-              different = deepdif.diff(conf.policies.top_level_policy, policies.self) !== undefined; //also check the top_level_policy
+              policies.policies.actions = policies.entities.actions; // Put actions under policies to just compare one object
+	            different = JSON.stringify(policies.policies) !== JSON.stringify(confPolicies.top_level);
+	            // different = deepdif.diff(confPolicies.top_level, policies.policies) !== undefined; //also check the top_level_policy
             }
             return different;
 
@@ -468,11 +479,12 @@ describe('Entities Api (with policies)', function () {
             }
           }).catch(function (err){
             Error.stackTraceLimit = Infinity;
+            console.log(err);
             console.log(err.trace);
           });
       });
 
-    });*/
+    });
 
     it('set policy for entity', function (done) {
       idmcore.setMocks(null, null, null, dbconnection, null);
