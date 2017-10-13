@@ -20,10 +20,12 @@ function cleanDb(c) {
   function disconnect(done) {
     dbconnection("disconnect").then(function () {
       rmdir(dbName + "_entities", function (err, dirs, files) {
-        rmdir(dbName + "_groups", function (err, dirs, files) {
-          db = null;
-          rmdir(conf.upfront.pap.storage.dbName + "_policies", function (err, dirs, files) {
-            done();
+        rmdir(dbName + "_audit", function (err, dirs, files) {
+          rmdir(dbName + "_groups", function (err, dirs, files) {
+            db = null;
+            rmdir(conf.upfront.pap.storage.dbName + "_policies", function (err, dirs, files) {
+              done();
+            });
           });
         });
       });
@@ -99,7 +101,7 @@ describe('UsedLessThan lock', function () {
         .then(function (res) {
           return idmcore.readEntity(admin_auth, alice_info_auth.id, alice_info_auth.type);
         }).then(function (res) {
-          if(!res.password){
+          if (!res.password) {
             return Promise.reject(new Error("cannot see password from the beginning"))
           }
           return idmcore.setEntityAttribute(admin_auth, alice_info_auth.id, alice_info_auth.type, "password", "2")
@@ -114,7 +116,7 @@ describe('UsedLessThan lock', function () {
             console.log('still can see the password after more than 5 actions with it!')
           }
           else {*/
-            done();
+          done();
           //}
         }, function handlereject(error) {
           throw error;
