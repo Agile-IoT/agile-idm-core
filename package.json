@@ -26,7 +26,7 @@
     "mocha": "2.4.5",
     "ulocks": "git+https://github.com/SEDARI/uLocks#v0.5.1",
     "agile-audit": "git+https://github.com/agile-iot/agile-audit#v0.1.0",
-    "winston": "^2.3.1"
+    "winston": "2.3.1"
   },
   "scripts": {
     "test": "mocha tests/*.js"

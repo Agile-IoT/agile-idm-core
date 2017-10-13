@@ -50,10 +50,13 @@ module.exports = function (Lock) {
       if (!context.isStatic) {
         if (valid(context.entity) && valid(context.entity.data) && valid(context.entity.data.id) && valid(context.entity.data.type)) {
           if(!process.env.NO_AUDIT || process.env.NO_AUDIT!=="1"){
-            var conf = process.env.AUDIT_CONF;
+            var conf = JSON.parse(process.env.AUDIT_CONF);
             w.log('ActionExecutedLessThan configuration obtained from AUDIT_CONF env varialbe is : '+conf);
             var that = this;
             return new Promise(function(resolve, reject) {
+              if(!conf.dbName){
+                Promise.reject(new Error("Cannot find configuration for audit db in ActionExecutedLessThan got: "+JSON.stringify(conf)))
+              }
               var audit = new Audit(conf);
               //the entity on which you want to check the condition. The user who should not have used my actions more than X times.
               var user = context.entity.data;

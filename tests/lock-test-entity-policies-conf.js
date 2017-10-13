@@ -8,8 +8,8 @@ module.exports = {
     dbName: "./pap-database",
     collection: "policies"
   },
-  custom_actions: __dirname + "/Actions",
-  custom_locks: __dirname + "/Locks",
+  custom_actions: __dirname + "/node_modules/agile-upfront-locks/Actions",
+  custom_locks: __dirname + "/node_modules/agile-upfront-locks/Locks",
   "policies": {
     "create_entity_policy": [
       // actions of an actor are not restricted a priori
@@ -392,7 +392,7 @@ module.exports = {
   "audit": {
     dbName: "database_",
     //according to https://www.npmjs.com/package/timeframe-to-seconds,
-    timeframe: '1m',
+    timeframe: '20s',
     //DETAILED=0, ONLY_IMPORTANT_STUFF=1
     level: 1,
     //regex: '^actions'
