@@ -425,6 +425,7 @@ describe('Entities Api (with policies)', function () {
     });
   });
 
+
   describe('#set and read Policies', function () {
 
     beforeEach(function (done) {
@@ -435,8 +436,24 @@ describe('Entities Api (with policies)', function () {
       cleanDb(done);
     });
 
-    it('should return the list of policies of the entity', function (done) {
-      idmcore.setMocks(null, null, null, dbconnection, null);
+
+
+		it('should return the list of policies of the entity', function (done) {
+			removeFunctions = function(obj) {
+				for(var prop in obj) {
+					if (isFunction(obj[prop])) {
+					  delete obj[prop];
+					}	else if (typeof obj[prop] === 'object')
+						removeFunctions(obj[prop]);
+				}
+			}
+
+			isFunction = function (functionToCheck) {
+				var getType = {};
+				return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
+			}
+
+			idmcore.setMocks(null, null, null, dbconnection, null);
       var entity = clone(entity_1);
 
       idmcore.createEntity(user_info_auth, entity_id, entity_type, entity)
@@ -448,23 +465,18 @@ describe('Entities Api (with policies)', function () {
             var different = false;
             for (var attribute in policies) {
               if (conf.policies.attribute_level_policies[entity_type].hasOwnProperty(attribute)) {
-	              console.log('DEEPDIFF of', attribute);
-                // console.log(JSON.stringify(conf.policies.attribute_level_policies[entity_type][attribute]));
-                // console.log(JSON.stringify(policies[attribute].flows));
-	              // different = deepdif.diff(policies[attribute].flows, conf.policies.attribute_level_policies[entity_type][attribute]) !== undefined;
+                removeFunctions(policies[attribute].flows);
 	              different = deepdif.diff(policies[attribute].flows, conf.policies.attribute_level_policies[entity_type][attribute]) !== undefined;
-	              console.log(deepdif.diff(policies[attribute].flows, conf.policies.attribute_level_policies[entity_type][attribute]));
-                //different = JSON.stringify(policies[attribute].flows) !== JSON.stringify(conf.policies.attribute_level_policies[entity_type][attribute]);
-                if (different) {
+	              if (different) {
                   break;
                 }
               }
             }
 
             if (!different) {
-              policies.policies.actions = policies.entities.actions; // Put actions under policies to just compare one object
-	            //different = deepdif.diff(policies.policies, conf.policies.top_level_policy) !== undefined; //also check the top_level_policy
-	            different = JSON.stringify(policies.policies) !== JSON.stringify(conf.policies.top_level_policy);
+              policies.policies.actions = policies.entities.actions; // Put actions under policies to reduce code
+							removeFunctions(policies.policies);
+							different = deepdif.diff(policies.policies, conf.policies.top_level_policy) !== undefined; //also check the top_level_policy
             }
             return different;
 
@@ -478,29 +490,6 @@ describe('Entities Api (with policies)', function () {
           console.log(err.trace);
         });
     });
-
-	  /*  it('should return the list of policies of the entity', function (done) {
-		idmcore.setMocks(null, null, null, dbconnection, null);
-		var entity = clone(entity_1);
-
-		idmcore.createEntity(user_info_auth, entity_id, entity_type, entity)
-			.then(function (data) {
-				return idmcore.getEntityPolicies(user_info_auth, entity_id, entity_type);
-			}).then(function (policies) { // policies: properties/entities/self = top_level_policies
-			ulocks.init(conf.upfront.ulocks).then(function () {
-				var Policy = ulocks.Policy;
-				entity_type = entity_type.replace('/', '');
-				for(var attribute in policies) {
-					if(conf.policies.attribute_level_policies[entity_type].hasOwnProperty(attribute)) {
-						var policy = new Policy(conf.policies.attribute_level_policies[entity_type][attribute]);
-						console.log(JSON.stringify(policy));
-						console.log(JSON.stringify(policies[attribute]));
-						//console.log(deepdif.diff(policies[attribute], policy));
-					}
-				}
-			})
-			});
-	});*/
 
     it('set policy for entity', function (done) {
       idmcore.setMocks(null, null, null, dbconnection, null);
