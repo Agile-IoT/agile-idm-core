@@ -8,8 +8,7 @@ module.exports = {
     dbName: "./pap-database",
     collection: "policies"
   },
-  custom_actions: __dirname + "/../node_modules/agile-upfront-locks/Actions",
-  custom_locks: __dirname + "/../node_modules/agile-upfront-locks/Locks",
+  
   "policies": {
     "create_entity_policy": [
       // actions of an actor are not restricted a priori

@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "agile-idm-entity-storage": "git+https://github.com/Agile-IoT/agile-idm-entity-storage#v1.0.3",
-    "agile-policies": "git+https://github.com/Agile-IoT/agile-policies.git#v0.3.1rc",
+    "agile-policies": "git+https://github.com/Agile-IoT/agile-policies.git#v0.3.2rc",
     "agile-upfront-locks": "git+https://github.com/Agile-IoT/agile-upfront-locks",
     "clone": "1.0.2",
     "http-errors": "^1.5.0",
@@ -25,7 +25,7 @@
     "grunt-jsbeautifier": "^0.2.13",
     "rmdir": "1.2.0",
     "mocha": "2.4.5",
-    "ulocks": "git+https://github.com/SEDARI/uLocks#v0.5.1",
+    "ulocks": "git+https://github.com/nopbyte/uLocks",
     "agile-audit": "git+https://github.com/agile-iot/agile-audit#v0.1.0",
     "winston": "2.3.1"
   },
