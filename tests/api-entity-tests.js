@@ -225,6 +225,25 @@ describe('Entities Api', function () {
         });
     });
 
+    it('should reject with 409 an update when the new attribute is forbidden by the schema', function (done) {
+      var idmcore = new IdmCore(conf);
+      var data2;
+      idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
+      var entity = clone(entity_1);
+      idmcore.createEntity(user_info, entity_id, entity_type, entity)
+        .then(function () {
+          return idmcore.setEntityAttribute(user_info, entity_id, entity_type, "groups", "x");
+        }).then(function (result) {
+        throw new Error("this attribute should not be allowed!");
+      }, function handlereject(r) {
+        if (r.statusCode === 409) {
+          done();
+        } else {
+          throw r;
+        }
+      });
+    });
+
     it('should update an entity by id and return the proper values afterwards', function (done) {
       var idmcore = new IdmCore(conf);
       var data2;
