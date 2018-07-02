@@ -152,27 +152,27 @@ describe('Api (Validation test)', function () {
 
   });
 
-  it('should reject with 409 when attempting to create an entity with a forbidden attribute name', function (done) {
-    var idmcore = new IdmCore(conf);
-    var entity_id = "1";
-    var entity_type = "/user";
-    var entity = {
-      "user_name": "some-id",
-      "auth_type": "some-type",
-      "groups": "x"
-
-    }
-    idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
-    idmcore.createEntity(user_info, entity_id, entity_type, entity)
-      .then(function (res) {
-        console.log("unexpected result " + res)
-        throw new Error("unexpected " + res);
-      }, function handlereject(error) {
-        if (error.statusCode == 409) {
-          done();
-        }
-      });
-
-  });
+  // it('should reject with 409 when attempting to create an entity with a forbidden attribute name', function (done) {
+  //   var idmcore = new IdmCore(conf);
+  //   var entity_id = "1";
+  //   var entity_type = "/user";
+  //   var entity = {
+  //     "user_name": "some-id",
+  //     "auth_type": "some-type",
+  //     "groups": "x"
+  //
+  //   }
+  //   idmcore.setMocks(null, null, PdpMockOk, dbconnection, pepMockOk);
+  //   idmcore.createEntity(user_info, entity_id, entity_type, entity)
+  //     .then(function (res) {
+  //       console.log("unexpected result " + res)
+  //       throw new Error("unexpected " + res);
+  //     }, function handlereject(error) {
+  //       if (error.statusCode == 409) {
+  //         done();
+  //       }
+  //     });
+  //
+  // });
 
 });
