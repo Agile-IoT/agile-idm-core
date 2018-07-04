@@ -43,7 +43,7 @@ var bob = {
   "password": "secret",
   "role": "admin",
   "owner": "bob!@!agile-local",
-  "id": "bob!@!agile-local",
+    "id": "bob!@!agile-local",
   "type": "/user"
 };
 var bob_auth = clone(bob);
@@ -154,7 +154,7 @@ describe('GROUP ACTIONS', function () {
           [
             {
               "lock": "isGroupMember",
-              "args": ["group"]
+              "args": ["group","admin!@!agile-local"]
             }
           ]
         }, {
@@ -206,7 +206,7 @@ describe('GROUP ACTIONS', function () {
           [
             {
               "lock": "isGroupMember",
-              "args": ["group"]
+              "args": ["group","admin!@!agile-local"]
             }
           ]
         }, {
@@ -258,7 +258,7 @@ describe('GROUP ACTIONS', function () {
           [
             {
               "lock": "isGroupMember",
-              "args": ["group"]
+              "args": ["group","admin!@!agile-local"]
             }
           ]
         }, {
