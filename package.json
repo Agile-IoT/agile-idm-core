@@ -8,7 +8,7 @@
     "test": "tests"
   },
   "dependencies": {
-    "agile-idm-entity-storage": "git+https://github.com/Agile-IoT/agile-idm-entity-storage#v1.0.3",
+    "agile-idm-entity-storage": "git+https://github.com/Agile-IoT/agile-idm-entity-storage#mongodb",
     "agile-policies": "git+https://github.com/Agile-IoT/agile-policies.git#v0.3.5",
     "agile-upfront-locks": "git+https://github.com/Agile-IoT/agile-upfront-locks#v0.0.2",
     "clone": "1.0.2",
